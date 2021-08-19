@@ -45,18 +45,23 @@ catkin_package(
     trajectory_msgs
 )
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
-  ${kindr_INCLUDE_DIRS}
-)
-
 add_library(
   ${PROJECT_NAME} 
   src/RosJointTrajectoryInterface.cpp
   src/RosMultiDOFJointTrajectoryInterface.cpp
   src/RosMultiDOFJointTrajectoryTranslationInterface.cpp
+)
+
+# Specify your packages header files.
+target_include_directories(${PROJECT_NAME} PRIVATE
+	include
+)
+
+# Header directories listed after 'SYSTEM' are marked as external, and don't generate warnings.
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${kindr_INCLUDE_DIRS}
 )
 
 target_link_libraries(
