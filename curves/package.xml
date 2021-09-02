@@ -1,12 +1,18 @@
 <?xml version="1.0"?>
+
 <package format="2">
+
   <name>curves</name>
   <version>0.4.1</version>
   <description>Curves spline library.</description>
+
   <maintainer email="vyuryev@anybotics.com">Valentin Yuryev</maintainer>
   <maintainer email="avijayan@anybotics.com">Aravind Vijayan</maintainer>
+
   <license>BSD</license>
+
   <url>https://github.com/anybotics/curves</url>
+
   <author>Renaud Dubé</author>
   <author>Abel Gawel</author>
   <author>Péter Fankhauser</author>
@@ -15,11 +21,16 @@
   <author>Mike Bosse</author>
   <author>Paul Furgale</author>
   <author>Gabriel Agamennoni</author>
+
   <buildtool_depend>catkin</buildtool_depend>
+
   <depend>kindr</depend>
-  <build_export_depend>eigen</build_export_depend>
   <depend>boost</depend>
   <depend>libgoogle-glog-dev</depend>
 
+  <build_export_depend>eigen</build_export_depend>
+
+  <test_depend>gtest</test_depend>
 <!--   <test_depend>cmake_code_coverage</test_depend> -->
+
 </package>
