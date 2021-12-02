@@ -15,4 +15,4 @@ struct ScalarCurveConfig {
   typedef double DerivativeType;
 };
 
-} // namespace
+}  // namespace curves

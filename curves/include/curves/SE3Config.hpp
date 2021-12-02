@@ -20,4 +20,4 @@ struct SE3Config {
   typedef kindr::TwistGlobalD DerivativeType;
 };
 
-} // namespace
+}  // namespace curves

@@ -1,32 +1,33 @@
 /*
- * @file SemiDiscreteSE3Curve.hpp
+ * @file DiscreteSE3Curve.hpp
  * @date Feb 3, 2016
  * @author Renaud Dubé, Abel Gawel
  */
 
-#ifndef CURVES_SEMI_DISCRETE_SE3_CURVE_HPP
-#define CURVES_SEMI_DISCRETE_SE3_CURVE_HPP
+#ifndef CURVES_DISCRETE_SE3_CURVE_HPP
+#define CURVES_DISCRETE_SE3_CURVE_HPP
 
-#include "SE3Curve.hpp"
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include "CubicHermiteSE3Curve.hpp"
 #include "LocalSupport2CoefficientManager.hpp"
 #include "SE3CompositionCurve.hpp"
-#include "gtsam/nonlinear/NonlinearFactorGraph.h"
+#include "SE3Curve.hpp"
 #include "SamplingPolicy.hpp"
-#include "CubicHermiteSE3Curve.hpp"
 
 namespace curves {
 
 /// Implements a discrete SE3 curve class.
-class SemiDiscreteSE3Curve : public SE3Curve {
-  friend class SE3CompositionCurve<SemiDiscreteSE3Curve, SemiDiscreteSE3Curve>;
+class DiscreteSE3Curve : public SE3Curve {
+  friend class SE3CompositionCurve<DiscreteSE3Curve, DiscreteSE3Curve>;
   friend class SamplingPolicy;
+
  public:
   typedef ValueType Coefficient;
   typedef LocalSupport2CoefficientManager<Coefficient>::TimeToKeyCoefficientMap TimeToKeyCoefficientMap;
   typedef LocalSupport2CoefficientManager<Coefficient>::CoefficientIter CoefficientIter;
 
-  SemiDiscreteSE3Curve();
-  virtual ~SemiDiscreteSE3Curve();
+  DiscreteSE3Curve();
+  virtual ~DiscreteSE3Curve();
 
   /// Print the value of the coefficient, for debugging and unit tests
   virtual void print(const std::string& str = "") const;
@@ -45,22 +46,17 @@ class SemiDiscreteSE3Curve : public SE3Curve {
   /// Extend the curve so that it can be evaluated at these times.
   /// Try to make the curve fit to the values.
   /// Underneath the curve should have some default policy for fitting.
-  virtual void extend(const std::vector<Time>& times,
-                      const std::vector<ValueType>& values,
-                      std::vector<Key>* outKeys = NULL);
+  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
   /// \brief Fit a new curve to these data points.
   ///
   /// The existing curve will be cleared.
   /// Underneath the curve should have some default policy for fitting.
-  virtual void fitCurve(const std::vector<Time>& times,
-                        const std::vector<ValueType>& values,
-                        std::vector<Key>* outKeys = NULL);
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
   /// \brief Set some coefficients of the curve
   /// The existing curve will NOT be cleared.
-  void setCurve(const std::vector<Time>& times,
-                const std::vector<ValueType>& values);
+  void setCurve(const std::vector<Time>& times, const std::vector<ValueType>& values);
 
   /// Evaluate the ambient space of the curve.
   virtual ValueType evaluate(Time time) const;
@@ -163,7 +159,7 @@ class SemiDiscreteSE3Curve : public SE3Curve {
   // todo : tidy up
 
   /// \brief Returns the number of coefficients in the correction curve
-  int correctionSize() const {return 0;}
+  int correctionSize() const { return 0; }
 
   /// \brief Fold in the correction curve into the base curve and reinitialize
   ///        correction curve coefficients to identity transformations.
@@ -179,7 +175,7 @@ class SemiDiscreteSE3Curve : public SE3Curve {
   void setCorrectionCoefficientAtTime(Time /*time*/, ValueType /*value*/) {}
 
   /// \brief Reset the correction curve to identity values with knots at desired times
-  void resetCorrectionCurve(const std::vector<Time>& /*times*/) {}
+  void resetCorrectionCurve(const std::vector<Time>& /*time*/) {}
 
   /// \brief Set the base curve to given values with knots at desired times
   /// Resets the curve beforehand.
@@ -197,7 +193,7 @@ class SemiDiscreteSE3Curve : public SE3Curve {
   void getBaseCurveTimesInWindow(std::vector<Time>* /*outTimes*/, Time /*begTime*/, Time /*endTime*/) const {}
 
   // return number of coefficients curve is composed of
-  int baseSize() const {return size();}
+  int baseSize() const { return size(); }
 
   void saveCorrectionCurveTimesAndValues(const std::string& /*filename*/) const {}
 
@@ -210,18 +206,15 @@ typedef kindr::minimal::QuatTransformationTemplate<double> SE3;
 typedef SE3::Rotation SO3;
 typedef kindr::minimal::AngleAxisTemplate<double> AngleAxis;
 
-
 // extend policy for slerp curves
-template<>
-inline void SamplingPolicy::extend<SemiDiscreteSE3Curve, SE3>(const std::vector<Time>& times,
-                                                          const std::vector<SE3>& values,
-                                                          SemiDiscreteSE3Curve* curve,
-                                                          std::vector<Key>* outKeys) {
-  //todo: deal with minSamplingPeriod_ when extending with multiple times
+template <>
+inline void SamplingPolicy::extend<DiscreteSE3Curve, SE3>(const std::vector<Time>& times, const std::vector<SE3>& values,
+                                                          DiscreteSE3Curve* curve, std::vector<Key>* outKeys) {
+  // todo: deal with minSamplingPeriod_ when extending with multiple times
   if (times.size() != 1) {
     curve->manager_.insertCoefficients(times, values, outKeys);
   } else {
-    //If the curve is empty or of size 1, simply add the new coefficient
+    // If the curve is empty or of size 1, simply add the new coefficient
     if (curve->isEmpty() || curve->size() == 1) {
       curve->manager_.insertCoefficients(times, values, outKeys);
     } else {
@@ -233,7 +226,7 @@ inline void SamplingPolicy::extend<SemiDiscreteSE3Curve, SE3>(const std::vector<
         if (measurementsSinceLastExtend_ == 1) {
           curve->manager_.addCoefficientAtEnd(times[0], values[0], outKeys);
         } else {
-          SemiDiscreteSE3Curve::TimeToKeyCoefficientMap::iterator itPrev = (--curve->manager_.coefficientEnd());
+          DiscreteSE3Curve::TimeToKeyCoefficientMap::iterator itPrev = (--curve->manager_.coefficientEnd());
           curve->manager_.modifyCoefficient(itPrev, times[0], values[0]);
         }
         if (measurementsSinceLastExtend_ == minimumMeasurements_) {
@@ -244,6 +237,6 @@ inline void SamplingPolicy::extend<SemiDiscreteSE3Curve, SE3>(const std::vector<
   }
 }
 
-} // namespace curves
+}  // namespace curves
 
 #endif /* CURVES_DISCRETE_SE3_CURVE_HPP */

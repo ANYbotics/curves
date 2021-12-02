@@ -1,27 +1,24 @@
-# Project configuration
-cmake_minimum_required (VERSION 3.1.3)
+cmake_minimum_required(VERSION 3.5.1)
 project(curves_ros)
 
 set(CMAKE_CXX_STANDARD 11)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-# Noisily default to Release build
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  	message(STATUS "Setting build type to 'Release' as none was specified.")
-  	set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-  	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-	"Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Find Catkin
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  curves
-  kindr_ros
-  trajectory_msgs
+set(CATKIN_PACKAGE_DEPENDENCIES
+	roscpp
+	curves
+	kindr_ros
+	trajectory_msgs
 )
 
-find_package(Eigen3)
+find_package(catkin REQUIRED
+	COMPONENTS
+		${CATKIN_PACKAGE_DEPENDENCIES}
+)
+
+find_package(Eigen3 REQUIRED)
 
 # Attempt to find catkinized kindr
 find_package(kindr QUIET)
@@ -39,14 +36,14 @@ catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
   CATKIN_DEPENDS
-    roscpp
-    curves
-    kindr_ros
-    trajectory_msgs
+		${CATKIN_PACKAGE_DEPENDENCIES}
 )
 
-add_library(
-  ${PROJECT_NAME} 
+###########
+## Build ##
+###########
+
+add_library(${PROJECT_NAME}
   src/RosJointTrajectoryInterface.cpp
   src/RosMultiDOFJointTrajectoryInterface.cpp
   src/RosMultiDOFJointTrajectoryTranslationInterface.cpp
@@ -69,14 +66,22 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
+#############
+## Install ##
+#############
 
-install(TARGETS ${PROJECT_NAME}
+install(
+	TARGETS
+		${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(
+	DIRECTORY
+		include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 ##########
@@ -90,15 +95,11 @@ if(CATKIN_ENABLE_TESTING)
 		rostest
 	)
 
-	# Run a ROS test (add rostest test-dependency).
-	# The *.test file has to be on the top of the list.
 	add_rostest_gtest(test_${PROJECT_NAME}
 		test/ros_interface.test
 		test/TestCurvesRos.cpp
 	)
-endif()
 
-if(TARGET test_${PROJECT_NAME})
 	target_link_libraries(test_${PROJECT_NAME}
 		gtest_main
 		${PROJECT_NAME}
@@ -121,3 +122,12 @@ if(TARGET test_${PROJECT_NAME})
 		)
 	endif(cmake_code_coverage_FOUND)
 endif()
+
+###########
+## Clang ##
+###########
+
+find_package(cmake_clang_tools QUIET)
+if(cmake_clang_tools_FOUND)
+	add_default_clang_tooling()
+endif(cmake_clang_tools_FOUND)

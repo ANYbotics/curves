@@ -5,8 +5,8 @@
  *      Author: Peter Fankhauser
  */
 
-#include <curves_ros/RosMultiDOFJointTrajectoryInterface.hpp>
 #include <ros/ros.h>
+#include <curves_ros/RosMultiDOFJointTrajectoryInterface.hpp>
 
 // STD
 #include <vector>
@@ -16,25 +16,17 @@
 
 namespace curves {
 
-RosMultiDOFJointTrajectoryInterface::RosMultiDOFJointTrajectoryInterface() :
-    CubicHermiteSE3Curve()
-{
+RosMultiDOFJointTrajectoryInterface::RosMultiDOFJointTrajectoryInterface() : CubicHermiteSE3Curve() {}
 
-}
+RosMultiDOFJointTrajectoryInterface::~RosMultiDOFJointTrajectoryInterface() {}
 
-RosMultiDOFJointTrajectoryInterface::~RosMultiDOFJointTrajectoryInterface()
-{
-
-}
-
-bool RosMultiDOFJointTrajectoryInterface::fromMessage(
-    const trajectory_msgs::MultiDOFJointTrajectory& message, const std::string& jointName)
-{
+bool RosMultiDOFJointTrajectoryInterface::fromMessage(const trajectory_msgs::MultiDOFJointTrajectory& message,
+                                                      const std::string& jointName) {
   size_t nJoints = message.joint_names.size();
   size_t j = 0;
   for (; j < nJoints; ++j) {
     if (message.joint_names[j] == jointName) break;
-    if (j == nJoints - 1) return false; // Joint name not found.
+    if (j == nJoints - 1) return false;  // Joint name not found.
   }
 
   std::vector<Time> times;
@@ -54,4 +46,4 @@ bool RosMultiDOFJointTrajectoryInterface::fromMessage(
   return true;
 }
 
-}
+}  // namespace curves

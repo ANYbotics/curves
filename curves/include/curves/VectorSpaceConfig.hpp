@@ -14,8 +14,8 @@ namespace curves {
 
 template <int N>
 struct VectorSpaceConfig {
-  typedef Eigen::Matrix<double,N,1> ValueType;
-  typedef Eigen::Matrix<double,N,1> DerivativeType;
+  typedef Eigen::Matrix<double, N, 1> ValueType;
+  typedef Eigen::Matrix<double, N, 1> DerivativeType;
 };
 
-} // namespace
+}  // namespace curves

@@ -7,8 +7,8 @@
 #pragma once
 
 #include <stdlib.h>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include <Eigen/Core>
 
@@ -32,6 +32,7 @@ void loadTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes
 void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& times, const std::vector<Eigen::VectorXd>& values);
 
 /// \brief Helper function to read CSV files formatted in: time0, time1, vectorEntry0, vectorEntry1, ...
-void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes0, std::vector<curves::Time>* outTimes1, std::vector<Eigen::VectorXd>* outValues);
+void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes0, std::vector<curves::Time>* outTimes1,
+                           std::vector<Eigen::VectorXd>* outValues);
 
-}
+}  // namespace curves

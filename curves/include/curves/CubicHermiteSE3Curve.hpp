@@ -11,9 +11,9 @@
 #include <kindr/Core>
 
 #include "curves/LocalSupport2CoefficientManager.hpp"
-#include "curves/SamplingPolicy.hpp"
 #include "curves/SE3CompositionCurve.hpp"
 #include "curves/SE3Curve.hpp"
+#include "curves/SamplingPolicy.hpp"
 
 // wrapper class for Hermite-style coefficients (made of QuatTransformation and Vector6)
 namespace kindr {
@@ -28,21 +28,13 @@ struct HermiteTransformation {
   HermiteTransformation(const Transform& transform, const Twist& derivatives);
   virtual ~HermiteTransformation();
 
-  Transform getTransformation() const {
-    return transformation_;
-  }
+  Transform getTransformation() const { return transformation_; }
 
-  Twist getTransformationDerivative() const {
-    return transformationDerivative_;
-  }
+  Twist getTransformationDerivative() const { return transformationDerivative_; }
 
-  void setTransformation(const Transform& transformation) {
-    transformation_ = transformation;
-  }
+  void setTransformation(const Transform& transformation) { transformation_ = transformation; }
 
-  void setTransformationDerivative(const Twist& transformationDerivative) {
-    transformationDerivative_ = transformationDerivative;
-  }
+  void setTransformationDerivative(const Twist& transformationDerivative) { transformationDerivative_ = transformationDerivative; }
 
  private:
   Transform transformation_;
@@ -53,15 +45,13 @@ template <typename Scalar>
 HermiteTransformation<Scalar>::HermiteTransformation() {}
 
 template <typename Scalar>
-HermiteTransformation<Scalar>::HermiteTransformation(const Transform& transform,
-                                                     const Twist& derivatives) :
-                                                     transformation_(transform),
-                                                     transformationDerivative_(derivatives) {}
+HermiteTransformation<Scalar>::HermiteTransformation(const Transform& transform, const Twist& derivatives)
+    : transformation_(transform), transformationDerivative_(derivatives) {}
 
 template <typename Scalar>
 HermiteTransformation<Scalar>::~HermiteTransformation() {}
 
-}
+}  // namespace kindr
 
 namespace curves {
 
@@ -97,8 +87,8 @@ typedef LocalSupport2CoefficientManager<Coefficient>::CoefficientIter Coefficien
 // q(t) = p_1 * exp(w_1*b_1) * exp(w_2*b_2) * exp(w_3*b_3)
 
 class CubicHermiteSE3Curve : public SE3Curve {
-
   friend class SamplingPolicy;
+
  public:
   typedef kindr::HermiteTransformation<double> Coefficient;
 
@@ -122,36 +112,24 @@ class CubicHermiteSE3Curve : public SE3Curve {
   int size() const;
 
   /// \brief calculate the slope between 2 coefficients
-  DerivativeType calculateSlope(const Time& timeA,
-                                const Time& timeB,
-                                const ValueType& coeffA,
-                                const ValueType& coeffB) const;
+  DerivativeType calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA, const ValueType& coeffB) const;
 
   /// Extend the curve so that it can be evaluated at these times.
   /// Try to make the curve fit to the values.
   /// Note: Assumes that extend times strictly increase the curve time
-  virtual void extend(const std::vector<Time>& times,
-                      const std::vector<ValueType>& values,
-                      std::vector<Key>* outKeys = NULL);
+  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
   /// \brief Fit a new curve to these data points.
   ///
   /// The existing curve will be cleared.fitCurveWithDerivatives
   /// Underneath the curve should have some default policy for fitting.
-  virtual void fitCurve(const std::vector<Time>& times,
-                        const std::vector<ValueType>& values,
-                        std::vector<Key>* outKeys = NULL);
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
-  virtual void fitCurveWithDerivatives(const std::vector<Time>& times,
-                        const std::vector<ValueType>& values,
-                        const DerivativeType& initialDerivative = DerivativeType(),
-                        const DerivativeType& finalDerivative = DerivativeType(),
-                        std::vector<Key>* outKeys = NULL);
+  virtual void fitCurveWithDerivatives(const std::vector<Time>& times, const std::vector<ValueType>& values,
+                                       const DerivativeType& initialDerivative = DerivativeType(),
+                                       const DerivativeType& finalDerivative = DerivativeType(), std::vector<Key>* outKeys = NULL);
 
-  virtual void fitPeriodicCurve(const std::vector<Time>& times,
-                                const std::vector<ValueType>& values,
-                                std::vector<Key>* outKeys = NULL);
-
+  virtual void fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
   /// Evaluate the ambient space of the curve.
   virtual bool evaluate(ValueType& value, Time time) const;
@@ -229,7 +207,7 @@ class CubicHermiteSE3Curve : public SE3Curve {
   void getCurveTimes(std::vector<Time>* outTimes) const;
 
   /// \brief Returns the number of coefficients in the correction curve
-  int correctionSize() const {return 0;}
+  int correctionSize() const { return 0; }
 
   /// \brief Fold in the correction curve into the base curve and reinitialize
   ///        correction curve coefficients to identity transformations.
@@ -263,9 +241,10 @@ class CubicHermiteSE3Curve : public SE3Curve {
   void getBaseCurveTimesInWindow(std::vector<Time>* /*outTimes*/, Time /*begTime*/, Time /*endTime*/) const {}
 
   // return number of coefficients curve is composed of
-  int baseSize() const {return size();}
+  int baseSize() const { return size(); }
 
   void saveCorrectionCurveTimesAndValues(const std::string& /*filename*/) const {}
+
  private:
   LocalSupport2CoefficientManager<Coefficient> manager_;
   SamplingPolicy hermitePolicy_;
@@ -279,7 +258,7 @@ typedef kindr::RotationQuaternionDiffD RotationQuaternionDiff;
 typedef Eigen::Matrix<double, 6, 1> Vector6;
 typedef kindr::TwistGlobalD Twist;
 
-SE3 transformationPower(SE3  T, double alpha);
+SE3 transformationPower(SE3 T, double alpha);
 
 SE3 composeTransformations(SE3 A, SE3 B);
 
@@ -289,12 +268,10 @@ SE3 invertAndComposeImplementation(SE3 A, SE3 B);
 
 // implements the special (extend) policies for Cubic Hermite curves
 template <>
-inline Key SamplingPolicy::defaultExtend<CubicHermiteSE3Curve, ValueType>(const Time& time,
-                  const ValueType& value,
-                  CubicHermiteSE3Curve* curve) {
-
+inline Key SamplingPolicy::defaultExtend<CubicHermiteSE3Curve, ValueType>(const Time& time, const ValueType& value,
+                                                                          CubicHermiteSE3Curve* curve) {
   DerivativeType derivative;
-  //cases:
+  // cases:
 
   // manager is empty
   if (curve->manager_.size() == 0) {
@@ -305,10 +282,7 @@ inline Key SamplingPolicy::defaultExtend<CubicHermiteSE3Curve, ValueType>(const 
     CoefficientIter last = curve->manager_.coefficientBegin();
     // calculate slope
     // note: unit of derivative is m/s for first 3 and rad/s for last 3 entries
-    derivative = curve->calculateSlope(last->first,
-                                time,
-                                last->second.coefficient.getTransformation(),
-                                value);
+    derivative = curve->calculateSlope(last->first, time, last->second.coefficient.getTransformation(), value);
     // update previous coefficient
     Coefficient updated(last->second.coefficient.getTransformation(), derivative);
     curve->manager_.updateCoefficientByKey(last->second.key, updated);
@@ -317,20 +291,16 @@ inline Key SamplingPolicy::defaultExtend<CubicHermiteSE3Curve, ValueType>(const 
     // get latest 2 coefficients from manager
     CoefficientIter rVal0, rVal1;
     CoefficientIter last = --curve->manager_.coefficientEnd();
-    curve->manager_.getCoefficientsAt(last->first,
-                               &rVal0,
-                               &rVal1);
+    curve->manager_.getCoefficientsAt(last->first, &rVal0, &rVal1);
 
     // update derivative of previous coefficient
     DerivativeType derivative0;
-    derivative0 = curve->calculateSlope(rVal0->first, time,
-                                        rVal0->second.coefficient.getTransformation(), value);
+    derivative0 = curve->calculateSlope(rVal0->first, time, rVal0->second.coefficient.getTransformation(), value);
     Coefficient updated(rVal1->second.coefficient.getTransformation(), derivative0);
     curve->manager_.updateCoefficientByKey(rVal1->second.key, updated);
 
     // calculate slope
-    derivative = curve->calculateSlope(rVal1->first, time,
-                                       rVal1->second.coefficient.getTransformation(), value);
+    derivative = curve->calculateSlope(rVal1->first, time, rVal1->second.coefficient.getTransformation(), value);
   }
   measurementsSinceLastExtend_ = 0;
   lastExtend_ = time;
@@ -338,9 +308,8 @@ inline Key SamplingPolicy::defaultExtend<CubicHermiteSE3Curve, ValueType>(const 
 }
 
 template <>
-inline Key SamplingPolicy::interpolationExtend<CubicHermiteSE3Curve, ValueType>(const Time& time,
-                        const ValueType& value,
-                        CubicHermiteSE3Curve* curve) {
+inline Key SamplingPolicy::interpolationExtend<CubicHermiteSE3Curve, ValueType>(const Time& time, const ValueType& value,
+                                                                                CubicHermiteSE3Curve* curve) {
   DerivativeType derivative;
   if (measurementsSinceLastExtend_ == 0) {
     // extend curve with new interpolation coefficient if necessary
@@ -352,12 +321,9 @@ inline Key SamplingPolicy::interpolationExtend<CubicHermiteSE3Curve, ValueType>(
     // assumes same velocities as last Coefficient
     CoefficientIter rVal0, rValInterp;
     CoefficientIter last = --curve->manager_.coefficientEnd();
-    curve->manager_.getCoefficientsAt(last->first,
-                               &rVal0,
-                               &rValInterp);
+    curve->manager_.getCoefficientsAt(last->first, &rVal0, &rValInterp);
 
-    derivative = curve->calculateSlope(rVal0->first, time,
-                                       rVal0->second.coefficient.getTransformation(), value);
+    derivative = curve->calculateSlope(rVal0->first, time, rVal0->second.coefficient.getTransformation(), value);
 
     // update the interpolated coefficient with given values and velocities from last coefficeint
     curve->manager_.removeCoefficientAtTime(rValInterp->first);
@@ -367,19 +333,16 @@ inline Key SamplingPolicy::interpolationExtend<CubicHermiteSE3Curve, ValueType>(
   return curve->manager_.insertCoefficient(time, Coefficient(value, derivative));
 }
 
-template<>
-inline void SamplingPolicy::extend<CubicHermiteSE3Curve, ValueType>(const std::vector<Time>& times,
-                                                             const std::vector<ValueType>& values,
-                                                             CubicHermiteSE3Curve* curve,
-                                                             std::vector<Key>* /*outKeys*/) {
+template <>
+inline void SamplingPolicy::extend<CubicHermiteSE3Curve, ValueType>(const std::vector<Time>& times, const std::vector<ValueType>& values,
+                                                                    CubicHermiteSE3Curve* curve, std::vector<Key>* /*outKeys*/) {
   for (std::size_t i = 0; i < times.size(); ++i) {
     // ensure time strictly increases
-    CHECK((times[i] > curve->manager_.getMaxTime()) || curve->manager_.size() == 0) << "curve can only be extended into the future. Requested = "
-        << times[i] << " < curve max time = " << curve->manager_.getMaxTime();
+    CHECK((times[i] > curve->manager_.getMaxTime()) || curve->manager_.size() == 0)
+        << "curve can only be extended into the future. Requested = " << times[i] << " < curve max time = " << curve->manager_.getMaxTime();
     if (curve->manager_.size() == 0) {
       defaultExtend(times[i], values[i], curve);
-    } else if((measurementsSinceLastExtend_ >= minimumMeasurements_ &&
-        lastExtend_ + minSamplingPeriod_ < times[i])) {
+    } else if ((measurementsSinceLastExtend_ >= minimumMeasurements_ && lastExtend_ + minSamplingPeriod_ < times[i])) {
       // delete interpolated coefficient
       CoefficientIter last = --curve->manager_.coefficientEnd();
       curve->manager_.removeCoefficientAtTime(last->first);
@@ -391,7 +354,7 @@ inline void SamplingPolicy::extend<CubicHermiteSE3Curve, ValueType>(const std::v
   }
 }
 
-} // namespace curves
+}  // namespace curves
 
 namespace kindr {
 
@@ -399,4 +362,4 @@ typedef curves::SE3Curve::ValueType ValueType;
 typedef curves::SE3Curve::DerivativeType DerivativeType;
 typedef kindr::HermiteTransformation<double> Coefficient;
 
-}
+}  // namespace kindr

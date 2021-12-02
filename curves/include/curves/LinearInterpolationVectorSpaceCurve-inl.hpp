@@ -5,10 +5,10 @@
  * @author Paul Furgale, Abel Gawel, Renaud Dube
 
 
-#include <curves/LinearInterpolationVectorSpaceCurve.hpp>
-#include <iostream>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <curves/LinearInterpolationVectorSpaceCurve.hpp>
+#include <iostream>
 
 namespace curves {
 

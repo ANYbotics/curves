@@ -12,10 +12,10 @@
 
 namespace curves {
 
-using PolynomialSplineContainerLinear    = PolynomialSplineContainer<1>;
+using PolynomialSplineContainerLinear = PolynomialSplineContainer<1>;
 using PolynomialSplineContainerQuadratic = PolynomialSplineContainer<2>;
-using PolynomialSplineContainerCubic     = PolynomialSplineContainer<3>;
-using PolynomialSplineContainerQuartic   = PolynomialSplineContainer<4>;
-using PolynomialSplineContainerQuintic   = PolynomialSplineContainer<5>;
+using PolynomialSplineContainerCubic = PolynomialSplineContainer<3>;
+using PolynomialSplineContainerQuartic = PolynomialSplineContainer<4>;
+using PolynomialSplineContainerQuintic = PolynomialSplineContainer<5>;
 
-}
+}  // namespace curves

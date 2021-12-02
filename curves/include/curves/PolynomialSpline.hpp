@@ -35,7 +35,6 @@ namespace curves {
 template <int splineOrder_>
 class PolynomialSpline {
  public:
-
   static constexpr unsigned int splineOrder = splineOrder_;
   static constexpr unsigned int coefficientCount = splineOrder + 1;
 
@@ -44,51 +43,32 @@ class PolynomialSpline {
   using EigenTimeVectorType = Eigen::Matrix<double, 1, coefficientCount>;
   using EigenCoefficientVectorType = Eigen::Matrix<double, coefficientCount, 1>;
 
-  PolynomialSpline() :
-    duration_(0.0),
-    didEvaluateCoeffs_(false),
-    coefficients_()
-  {
+  PolynomialSpline() : duration_(0.0), didEvaluateCoeffs_(false), coefficients_() {}
 
-  }
+  template <typename SplineCoeff_>
+  PolynomialSpline(SplineCoeff_&& coefficients, double duration)
+      : duration_(duration), didEvaluateCoeffs_(true), coefficients_(std::forward<SplineCoeff_>(coefficients)) {}
 
-  template<typename SplineCoeff_>
-  PolynomialSpline(SplineCoeff_&& coefficients, double duration) :
-    duration_(duration),
-    didEvaluateCoeffs_(true),
-    coefficients_(std::forward<SplineCoeff_>(coefficients))
-  {
+  explicit PolynomialSpline(const SplineOptions& options) : duration_(options.tf_) { computeCoefficients(options); }
 
-  }
-
-  explicit PolynomialSpline(const SplineOptions& options) : duration_(options.tf_) {
-    computeCoefficients(options);
-  }
-
-  explicit PolynomialSpline(SplineOptions&& options) : duration_(options.tf_) {
-    computeCoefficients(std::move(options));
-  }
+  explicit PolynomialSpline(SplineOptions&& options) : duration_(options.tf_) { computeCoefficients(std::move(options)); }
 
   virtual ~PolynomialSpline() = default;
 
-  PolynomialSpline(PolynomialSpline &&) = default;
-  PolynomialSpline& operator=(PolynomialSpline &&) = default;
+  PolynomialSpline(PolynomialSpline&&) = default;
+  PolynomialSpline& operator=(PolynomialSpline&&) = default;
 
   PolynomialSpline(const PolynomialSpline&) = default;
   PolynomialSpline& operator=(const PolynomialSpline&) = default;
 
   //! Get the coefficients of the spline.
-  const SplineCoefficients& getCoefficients() const {
-    return coefficients_;
-  }
+  const SplineCoefficients& getCoefficients() const { return coefficients_; }
 
   //! Get the coefficients of the spline.
-  SplineCoefficients* getCoefficientsPtr() {
-    return &coefficients_;
-  }
+  SplineCoefficients* getCoefficientsPtr() { return &coefficients_; }
 
   //! Compute the coefficients of the spline.
-  template<typename SplineOptionsType_>
+  template <typename SplineOptionsType_>
   bool computeCoefficients(SplineOptionsType_&& options) {
     duration_ = options.tf_;
     return SplineImplementation::compute(std::forward<SplineOptionsType_>(options), coefficients_);
@@ -102,24 +82,18 @@ class PolynomialSpline {
 
   //! Get the spline evaluated at time tk.
   constexpr double getPositionAtTime(double tk) const {
-    return std::inner_product(coefficients_.begin(), coefficients_.end(),
-                              SplineImplementation::tau(tk).begin(), 0.0);
+    return std::inner_product(coefficients_.begin(), coefficients_.end(), SplineImplementation::tau(tk).begin(), 0.0);
   }
 
   //! Get the first derivative of the spline evaluated at time tk.
   constexpr double getVelocityAtTime(double tk) const {
-    return std::inner_product(coefficients_.begin(), coefficients_.end(),
-                              SplineImplementation::dtau(tk).begin(), 0.0);
+    return std::inner_product(coefficients_.begin(), coefficients_.end(), SplineImplementation::dtau(tk).begin(), 0.0);
   }
 
   //! Get the second derivative of the spline evaluated at time tk.
   constexpr double getAccelerationAtTime(double tk) const {
-    return std::inner_product(coefficients_.begin(), coefficients_.end(),
-                              SplineImplementation::ddtau(tk).begin(), 0.0);
+    return std::inner_product(coefficients_.begin(), coefficients_.end(), SplineImplementation::ddtau(tk).begin(), 0.0);
   }
-
-
-
 
   //! Get the time vector evaluated at time tk.
   static inline void getTimeVector(Eigen::Ref<EigenTimeVectorType> timeVec, const double tk) {
@@ -127,27 +101,20 @@ class PolynomialSpline {
   }
 
   //! Get the time vector evaluated at time tk.
-  template<typename Derived>
-  static inline void getTimeVector(Eigen::MatrixBase<Derived> const & timeVec, const double tk) {
-    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void getTimeVector(Eigen::MatrixBase<Derived> const& timeVec, const double tk) {
+    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) =
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tau(tk)).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) = Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tau(tk)).data());
   }
 
   //! Get the time vector evaluated at time tk and add it to the input vector.
-  template<typename Derived>
-  static inline void addTimeVector(Eigen::MatrixBase<Derived> const & timeVec, const double tk) {
-    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void addTimeVector(Eigen::MatrixBase<Derived> const& timeVec, const double tk) {
+    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) +=
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tau(tk)).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) += Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tau(tk)).data());
   }
-
-
-
 
   //! Get the first derivative of the time vector evaluated at time tk.
   static inline void getDTimeVector(Eigen::Ref<EigenTimeVectorType> dtimeVec, const double tk) {
@@ -155,26 +122,20 @@ class PolynomialSpline {
   }
 
   //! Get the first derivative of the time vector evaluated at time tk.
-  template<typename Derived>
-  static inline void getDiffTimeVector(Eigen::MatrixBase<Derived> const & dtimeVec, const double tk) {
-    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void getDiffTimeVector(Eigen::MatrixBase<Derived> const& dtimeVec, const double tk) {
+    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) =
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtau(tk)).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) = Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtau(tk)).data());
   }
 
   //! Get the first derivative of the time vector evaluated at time tk and add it to the input vector.
-  template<typename Derived>
-  static inline void addDiffTimeVector(Eigen::MatrixBase<Derived> const & dtimeVec, const double tk) {
-    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void addDiffTimeVector(Eigen::MatrixBase<Derived> const& dtimeVec, const double tk) {
+    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) +=
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtau(tk)).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) += Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtau(tk)).data());
   }
-
-
 
   //! Get the second derivative of the time vector evaluated at time tk.
   static inline void getDDTimeVector(Eigen::Ref<EigenTimeVectorType> ddtimeVec, const double tk) {
@@ -182,26 +143,20 @@ class PolynomialSpline {
   }
 
   //! Get the second derivative of the time vector evaluated at time tk.
-  template<typename Derived>
-  static inline void getDDiffTimeVector(Eigen::MatrixBase<Derived> const & ddtimeVec, const double tk) {
-    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void getDDiffTimeVector(Eigen::MatrixBase<Derived> const& ddtimeVec, const double tk) {
+    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) =
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtau(tk)).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) = Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtau(tk)).data());
   }
 
   //! Get the second derivative of the time vector evaluated at time tk and add it to the input vector.
-  template<typename Derived>
-  static inline void addDDiffTimeVector(Eigen::MatrixBase<Derived> const & ddtimeVec, const double tk) {
-    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void addDDiffTimeVector(Eigen::MatrixBase<Derived> const& ddtimeVec, const double tk) {
+    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) +=
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::ddtau(tk)).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) += Eigen::Map<const EigenTimeVectorType>((SplineImplementation::ddtau(tk)).data());
   }
-
-
 
   //! Get the time vector evaluated at zero.
   static inline void getTimeVectorAtZero(Eigen::Ref<EigenTimeVectorType> timeVec) {
@@ -209,29 +164,20 @@ class PolynomialSpline {
   }
 
   //! Get the time vector evaluated at zero.
-  template<typename Derived>
-  static inline void getTimeVectorAtZero(
-      Eigen::MatrixBase<Derived> const & timeVec) {
-    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void getTimeVectorAtZero(Eigen::MatrixBase<Derived> const& timeVec) {
+    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) =
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tauZero).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) = Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tauZero).data());
   }
 
   //! Get the time vector evaluated at zero.
-  template<typename Derived>
-  static inline void addTimeVectorAtZero(
-      Eigen::MatrixBase<Derived> const & timeVec) {
-    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void addTimeVectorAtZero(Eigen::MatrixBase<Derived> const& timeVec) {
+    assert(timeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && timeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) +=
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tauZero).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(timeVec) += Eigen::Map<const EigenTimeVectorType>((SplineImplementation::tauZero).data());
   }
-
-
-
 
   //! Get the first derivative of the time vector evaluated at zero.
   static inline void getDTimeVectorAtZero(Eigen::Ref<EigenTimeVectorType> dtimeVec) {
@@ -239,27 +185,20 @@ class PolynomialSpline {
   }
 
   //! Get the time vector evaluated at zero.
-  template<typename Derived>
-  static inline void getDiffTimeVectorAtZero(
-      Eigen::MatrixBase<Derived> const & dtimeVec) {
-    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void getDiffTimeVectorAtZero(Eigen::MatrixBase<Derived> const& dtimeVec) {
+    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) =
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtauZero).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) = Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtauZero).data());
   }
 
   //! Get the time vector evaluated at zero.
-  template<typename Derived>
-  static inline void addDiffTimeVectorAtZero(
-      Eigen::MatrixBase<Derived> const & dtimeVec) {
-    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void addDiffTimeVectorAtZero(Eigen::MatrixBase<Derived> const& dtimeVec) {
+    assert(dtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && dtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) +=
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtauZero).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(dtimeVec) += Eigen::Map<const EigenTimeVectorType>((SplineImplementation::dtauZero).data());
   }
-
 
   //! Get the second derivative of the time vector evaluated at zero.
   static inline void getDDTimeVectorAtZero(Eigen::Ref<EigenTimeVectorType> ddtimeVec) {
@@ -267,31 +206,23 @@ class PolynomialSpline {
   }
 
   //! Get the time vector evaluated at zero.
-  template<typename Derived>
-  static inline void getDDiffTimeVectorAtZero(
-      Eigen::MatrixBase<Derived> const & ddtimeVec) {
-    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void getDDiffTimeVectorAtZero(Eigen::MatrixBase<Derived> const& ddtimeVec) {
+    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) =
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::ddtauZero).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) = Eigen::Map<const EigenTimeVectorType>((SplineImplementation::ddtauZero).data());
   }
 
   //! Get the time vector evaluated at zero.
-  template<typename Derived>
-  static inline void addDDiffTimeVectorAtZero(
-      Eigen::MatrixBase<Derived> const & ddtimeVec) {
-    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime &&
-           ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
+  template <typename Derived>
+  static inline void addDDiffTimeVectorAtZero(Eigen::MatrixBase<Derived> const& ddtimeVec) {
+    assert(ddtimeVec.rows() == EigenTimeVectorType::RowsAtCompileTime && ddtimeVec.cols() == EigenTimeVectorType::ColsAtCompileTime);
     // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) +=
-        Eigen::Map<const EigenTimeVectorType>((SplineImplementation::ddtauZero).data());
+    const_cast<Eigen::MatrixBase<Derived>&>(ddtimeVec) += Eigen::Map<const EigenTimeVectorType>((SplineImplementation::ddtauZero).data());
   }
 
   //! Get the duration of the spline in seconds.
-  double getSplineDuration() const {
-    return duration_;
-  }
+  double getSplineDuration() const { return duration_; }
 
  protected:
   //! The duration of the spline in seconds.
@@ -307,4 +238,4 @@ class PolynomialSpline {
   SplineCoefficients coefficients_;
 };
 
-} /* namespace */
+}  // namespace curves

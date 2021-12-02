@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "curves/SE3Config.hpp"
-#include "curves/Curve.hpp"
 #include <Eigen/Core>
+#include "curves/Curve.hpp"
+#include "curves/SE3Config.hpp"
 
 namespace curves {
 
@@ -142,10 +142,9 @@ class SE3Curve : public Curve<SE3Config> {
   virtual void saveCorrectionCurveTimesAndValues(const std::string& filename) const = 0;
 
   /// \brief Get the dimension of this curve
-  //virtual size_t dim() const;
+  // virtual size_t dim() const;
   ///@}
  private:
-
 };
 
-} // namespace
+}  // namespace curves

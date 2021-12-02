@@ -8,8 +8,8 @@
 #ifndef CURVES_LINEAR_INTERPOLATION_VECTOR_SPACE_CURVE_HPP
 #define CURVES_LINEAR_INTERPOLATION_VECTOR_SPACE_CURVE_HPP
 
-#include "VectorSpaceCurve.hpp"
 #include "LocalSupport2CoefficientManager.hpp"
+#include "VectorSpaceCurve.hpp"
 #include "gtsam/nonlinear/NonlinearFactorGraph.h"
 
 namespace curves {

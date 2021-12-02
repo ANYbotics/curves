@@ -11,8 +11,8 @@
 
 namespace curves {
 
-SE3Curve::SE3Curve(){}
+SE3Curve::SE3Curve() {}
 
-SE3Curve::~SE3Curve(){}
+SE3Curve::~SE3Curve() {}
 
-}  // namespace
+}  // namespace curves

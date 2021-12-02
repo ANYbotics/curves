@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "SE3Curve.hpp"
-#include "LocalSupport2CoefficientManager.hpp"
-#include "kindr/Core"
-#include "SE3CompositionCurve.hpp"
-#include "SamplingPolicy.hpp"
 #include "CubicHermiteSE3Curve.hpp"
+#include "LocalSupport2CoefficientManager.hpp"
+#include "SE3CompositionCurve.hpp"
+#include "SE3Curve.hpp"
+#include "SamplingPolicy.hpp"
+#include "kindr/Core"
 
 namespace curves {
 
@@ -24,6 +24,7 @@ class SlerpSE3Curve : public SE3Curve {
   friend class SE3CompositionCurve<SlerpSE3Curve, SlerpSE3Curve>;
   friend class SE3CompositionCurve<SlerpSE3Curve, CubicHermiteSE3Curve>;
   friend class SamplingPolicy;
+
  public:
   typedef SE3Curve::ValueType ValueType;
   typedef SE3Curve::DerivativeType DerivativeType;
@@ -51,22 +52,17 @@ class SlerpSE3Curve : public SE3Curve {
   /// Extend the curve so that it can be evaluated at these times.
   /// Try to make the curve fit to the values.
   /// Underneath the curve should have some default policy for fitting.
-  virtual void extend(const std::vector<Time>& times,
-                      const std::vector<ValueType>& values,
-                      std::vector<Key>* outKeys = NULL);
+  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
   /// \brief Fit a new curve to these data points.
   ///
   /// The existing curve will be cleared.
   /// Underneath the curve should have some default policy for fitting.
-  virtual void fitCurve(const std::vector<Time>& times,
-                        const std::vector<ValueType>& values,
-                        std::vector<Key>* outKeys = NULL);
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
 
   /// \brief Set some coefficients of the curve
   /// The existing curve will NOT be cleared.
-  void setCurve(const std::vector<Time>& times,
-                const std::vector<ValueType>& values);
+  void setCurve(const std::vector<Time>& times, const std::vector<ValueType>& values);
 
   /// Evaluate the ambient space of the curve.
   virtual ValueType evaluate(Time time) const;
@@ -150,7 +146,7 @@ class SlerpSE3Curve : public SE3Curve {
   // todo : tidy up
 
   /// \brief Returns the number of coefficients in the correction curve
-  int correctionSize() const {return 0;}
+  int correctionSize() const { return 0; }
 
   /// \brief Fold in the correction curve into the base curve and reinitialize
   ///        correction curve coefficients to identity transformations.
@@ -184,7 +180,7 @@ class SlerpSE3Curve : public SE3Curve {
   void getBaseCurveTimesInWindow(std::vector<Time>* /*outTimes*/, Time /*begTime*/, Time /*endTime*/) const {}
 
   // return number of coefficients curve is composed of
-  int baseSize() const {return size();}
+  int baseSize() const { return size(); }
 
   void saveCorrectionCurveTimesAndValues(const std::string& /*filename*/) const {}
 
@@ -197,23 +193,21 @@ typedef kindr::HomogeneousTransformationPosition3RotationQuaternionD SE3;
 typedef SE3::Rotation SO3;
 typedef kindr::AngleAxisPD AngleAxis;
 
-SE3 transformationPower(SE3  T, double alpha);
+SE3 transformationPower(SE3 T, double alpha);
 
 SE3 composeTransformations(SE3 A, SE3 B);
 
 SE3 inverseTransformation(SE3 T);
 
 // extend policy for slerp curves
-template<>
-inline void SamplingPolicy::extend<SlerpSE3Curve, SE3>(const std::vector<Time>& times,
-                                                       const std::vector<SE3>& values,
-                                                       SlerpSE3Curve* curve,
+template <>
+inline void SamplingPolicy::extend<SlerpSE3Curve, SE3>(const std::vector<Time>& times, const std::vector<SE3>& values, SlerpSE3Curve* curve,
                                                        std::vector<Key>* outKeys) {
-  //todo: deal with minSamplingPeriod_ when extending with multiple times
+  // todo: deal with minSamplingPeriod_ when extending with multiple times
   if (times.size() != 1) {
     curve->manager_.insertCoefficients(times, values, outKeys);
   } else {
-    //If the curve is empty or of size 1, simply add the new coefficient
+    // If the curve is empty or of size 1, simply add the new coefficient
     if (curve->isEmpty() || curve->size() == 1) {
       curve->manager_.insertCoefficients(times, values, outKeys);
     } else {
@@ -236,5 +230,4 @@ inline void SamplingPolicy::extend<SlerpSE3Curve, SE3>(const std::vector<Time>& 
   }
 }
 
-} // namespace curves
-
+}  // namespace curves

@@ -8,14 +8,14 @@
 #pragma once
 
 // Eigen
-#include "curves/polynomial_splines.hpp"
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include "curves/polynomial_splines.hpp"
 
 // std
 #include <iostream>
-#include <memory>
 #include <limits>
+#include <memory>
 
 // boost
 #include <boost/math/special_functions/pow.hpp>
@@ -46,7 +46,7 @@ class PolynomialSplineContainer {
   void setContainerTime(double t);
 
   //! Add a spline to the container.
-  template<typename SplineType_>
+  template <typename SplineType_>
   bool addSpline(SplineType_&& spline) {
     containerDuration_ += spline.getSplineDuration();
     splines_.emplace_back(std::forward<SplineType_>(spline));
@@ -110,28 +110,21 @@ class PolynomialSplineContainer {
    * Minimize spline coefficients s.t. position, velocity and acceleration constraints are satisfied
    * (i.e., s.t. the spline conjunction is smooth up the second derivative).
    */
-  bool setData(
-      const std::vector<double>& knotDurations,
-      const std::vector<double>& knotPositions,
-      double initialVelocity, double initialAcceleration,
-      double finalVelocity, double finalAcceleration);
+  bool setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions, double initialVelocity,
+               double initialAcceleration, double finalVelocity, double finalAcceleration);
 
   /*!
    * Minimize spline coefficients s.t. position and velocity constraints are satisfied
    * (i.e., s.t. the spline conjunction is smooth up the first derivative).
    */
-  bool setData(
-      const std::vector<double>& knotDurations,
-      const std::vector<double>& knotPositions,
-      double initialVelocity, double finalVelocity);
+  bool setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions, double initialVelocity,
+               double finalVelocity);
 
   /*!
    * Find linear part of the spline coefficients (a0, a1) s.t. position constraints are satisfied.
    * If the spline order is larger than 1, the remaining spline coefficients are set to zero.
    */
-  virtual bool setData(
-      const std::vector<double>& knotDurations,
-      const std::vector<double>& knotPositions);
+  virtual bool setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions);
 
   static constexpr double undefinedValue = std::numeric_limits<double>::quiet_NaN();
 
@@ -147,34 +140,19 @@ class PolynomialSplineContainer {
    * Coefficient vector is:
    *    q = [a15x a14x ... a10x a15y ... a10y a25x ... a20y ... an5x ... an0y]
    */
-  inline int getCoeffIndex(const int splineIdx, const int aIdx) const {
-    return splineIdx*(splineOrder_+1) + aIdx;
-  }
+  inline int getCoeffIndex(const int splineIdx, const int aIdx) const { return splineIdx * (splineOrder_ + 1) + aIdx; }
 
-  inline int getSplineColumnIndex(const int splineIdx) const {
-    return getCoeffIndex(splineIdx, 0);
-  }
+  inline int getSplineColumnIndex(const int splineIdx) const { return getCoeffIndex(splineIdx, 0); }
 
-  void addInitialConditions(
-      const Eigen::VectorXd& initialConditions,
-      unsigned int& constraintIdx);
+  void addInitialConditions(const Eigen::VectorXd& initialConditions, unsigned int& constraintIdx);
 
-  void addFinalConditions(
-      const Eigen::VectorXd& finalConditions,
-      unsigned int& constraintIdx,
-      const double lastSplineDuration,
-      const unsigned int lastSplineId);
+  void addFinalConditions(const Eigen::VectorXd& finalConditions, unsigned int& constraintIdx, const double lastSplineDuration,
+                          const unsigned int lastSplineId);
 
-  void addJunctionsConditions(
-      const std::vector<double>& splineDurations,
-      const std::vector<double>& knotPositions,
-      unsigned int& constraintIdx,
-      const unsigned int num_junctions);
+  void addJunctionsConditions(const std::vector<double>& splineDurations, const std::vector<double>& knotPositions,
+                              unsigned int& constraintIdx, const unsigned int num_junctions);
 
-  bool extractSplineCoefficients(
-      const Eigen::VectorXd& coeffs,
-      const std::vector<double>& splineDurations,
-      const unsigned int num_splines);
+  bool extractSplineCoefficients(const Eigen::VectorXd& coeffs, const std::vector<double>& splineDurations, const unsigned int num_splines);
 
   //! Conjunction of smoothly interconnected splines.
   SplineList splines_;
@@ -198,6 +176,6 @@ class PolynomialSplineContainer {
   Eigen::VectorXd equalityConstraintTargetValues_;
 };
 
-} /* namespace */
+}  // namespace curves
 
 #include <curves/PolynomialSplineContainer.tpp>

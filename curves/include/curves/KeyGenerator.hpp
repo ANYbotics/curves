@@ -12,12 +12,9 @@
 
 namespace curves {
 
-class KeyGenerator
-{
+class KeyGenerator {
  public:
-
   static size_t getNextKey();
-
 };
 
-} // namespace curves
+}  // namespace curves

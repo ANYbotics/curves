@@ -12,8 +12,7 @@
 // curves
 #include "curves/polynomial_splines_containers.hpp"
 
-TEST(PolynomialSplineContainer, getActiveSplineIndexAtTime)
-{
+TEST(PolynomialSplineContainer, getActiveSplineIndexAtTime) {
   std::vector<double> knotPos;
   std::vector<double> knotVal;
 
@@ -46,7 +45,6 @@ TEST(PolynomialSplineContainer, getActiveSplineIndexAtTime)
   EXPECT_EQ(1.0, timeOffset);
 }
 
-
 TEST(PolynomialSplineContainer, eval) {
   std::vector<double> knotPos;
   std::vector<double> knotVal;
@@ -68,26 +66,26 @@ TEST(PolynomialSplineContainer, eval) {
   curves::PolynomialSplineContainerQuintic polyContainer;
   polyContainer.setData(knotPos, knotVal, initialVelocity, initialAcceleration, finalVelocity, finalAcceleration);
 
-  for (int i=0; i<knotVal.size()-1; i++) {
-    EXPECT_NEAR(knotVal[i], polyContainer.getSpline(i)->getPositionAtTime(0.0), 1e-2 ) << " knot:"  << i;
-    EXPECT_NEAR(knotVal[i+1], polyContainer.getSpline(i)->getPositionAtTime(knotPos[i+1]-knotPos[i]), 1e-2) << " knot:"  << i;
+  for (int i = 0; i < knotVal.size() - 1; i++) {
+    EXPECT_NEAR(knotVal[i], polyContainer.getSpline(i)->getPositionAtTime(0.0), 1e-2) << " knot:" << i;
+    EXPECT_NEAR(knotVal[i + 1], polyContainer.getSpline(i)->getPositionAtTime(knotPos[i + 1] - knotPos[i]), 1e-2) << " knot:" << i;
   }
 
-    EXPECT_NEAR(knotVal[0], polyContainer.getPositionAtTime(knotPos[0]), 1e-2 );
-//  for (int i = 0; i < knotVal.size(); ++i) {
-//    EXPECT_NEAR(knotVal[i], polyContainer.getPositionAtTime(knotPos[i]), 1e-2 );
-//  }
+  EXPECT_NEAR(knotVal[0], polyContainer.getPositionAtTime(knotPos[0]), 1e-2);
+  //  for (int i = 0; i < knotVal.size(); ++i) {
+  //    EXPECT_NEAR(knotVal[i], polyContainer.getPositionAtTime(knotPos[i]), 1e-2 );
+  //  }
 
-//  EXPECT_NEAR(initialVelocity, polyContainer.getSpline(0)->getVelocityAtTime(0.0), 1e-2 );
-//  EXPECT_NEAR(finalVelocity, polyContainer.getSpline(knotVal.size()-2)->getVelocityAtTime(knotPos[knotPos.size()-1]-knotPos[knotVal.size()-2]), 1e-2 );
-//
-//  EXPECT_NEAR(initialAcceleration, polyContainer.getSpline(0)->getAccelerationAtTime(0.0), 1e-2 );
-//  EXPECT_NEAR(finalAcceleration, polyContainer.getSpline(knotVal.size()-2)->getAccelerationAtTime(knotPos[knotPos.size()-1]-knotPos[knotVal.size()-2]), 1e-2 );
-
+  //  EXPECT_NEAR(initialVelocity, polyContainer.getSpline(0)->getVelocityAtTime(0.0), 1e-2 );
+  //  EXPECT_NEAR(finalVelocity,
+  //  polyContainer.getSpline(knotVal.size()-2)->getVelocityAtTime(knotPos[knotPos.size()-1]-knotPos[knotVal.size()-2]), 1e-2 );
+  //
+  //  EXPECT_NEAR(initialAcceleration, polyContainer.getSpline(0)->getAccelerationAtTime(0.0), 1e-2 );
+  //  EXPECT_NEAR(finalAcceleration,
+  //  polyContainer.getSpline(knotVal.size()-2)->getAccelerationAtTime(knotPos[knotPos.size()-1]-knotPos[knotVal.size()-2]), 1e-2 );
 }
 
-TEST(PolynomialSplineContainer, getState)
-{
+TEST(PolynomialSplineContainer, getState) {
   std::vector<double> knotPos;
   std::vector<double> knotVal;
 

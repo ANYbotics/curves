@@ -11,7 +11,7 @@
 namespace curves {
 namespace spline_traits {
 
-template<typename Core_, int SplineOrder_>
+template <typename Core_, int SplineOrder_>
 constexpr unsigned int spline_rep<Core_, SplineOrder_>::numCoefficients;
 
 using spline3 = spline_rep<double, 3>;
@@ -24,5 +24,5 @@ constexpr std::array<double, spline5::numCoefficients> spline5::tauZero;
 constexpr std::array<double, spline5::numCoefficients> spline5::dtauZero;
 constexpr std::array<double, spline5::numCoefficients> spline5::ddtauZero;
 
-}
-}
+}  // namespace spline_traits
+}  // namespace curves

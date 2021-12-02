@@ -14,20 +14,16 @@
 // random number generation
 #include <random>
 
-
 // Construct a random number generator
 std::random_device randomDevice;
 std::default_random_engine randomEngine(randomDevice());
 std::uniform_real_distribution<double> uniformDistribution(-10.0, 10.0);
 
-
-TEST(PolynomialSplines, PolynomialSplinesCubic)
-{
+TEST(PolynomialSplines, PolynomialSplinesCubic) {
   curves::PolynomialSplineCubic spline;
 
-  curves::SplineOptions opts(std::abs(uniformDistribution(randomEngine)),
-                             uniformDistribution(randomEngine), uniformDistribution(randomEngine),
-                             uniformDistribution(randomEngine), uniformDistribution(randomEngine),
+  curves::SplineOptions opts(std::abs(uniformDistribution(randomEngine)), uniformDistribution(randomEngine),
+                             uniformDistribution(randomEngine), uniformDistribution(randomEngine), uniformDistribution(randomEngine),
                              uniformDistribution(randomEngine), uniformDistribution(randomEngine));
 
   spline.computeCoefficients(opts);
@@ -39,13 +35,11 @@ TEST(PolynomialSplines, PolynomialSplinesCubic)
   EXPECT_NEAR(spline.getVelocityAtTime(opts.tf_), opts.velT_, 1e-5);
 }
 
-TEST(PolynomialSplines, PolynomialSplinesQuintic)
-{
+TEST(PolynomialSplines, PolynomialSplinesQuintic) {
   curves::PolynomialSplineQuintic spline;
 
-  curves::SplineOptions opts(std::abs(uniformDistribution(randomEngine)),
-                             uniformDistribution(randomEngine), uniformDistribution(randomEngine),
-                             uniformDistribution(randomEngine), uniformDistribution(randomEngine),
+  curves::SplineOptions opts(std::abs(uniformDistribution(randomEngine)), uniformDistribution(randomEngine),
+                             uniformDistribution(randomEngine), uniformDistribution(randomEngine), uniformDistribution(randomEngine),
                              uniformDistribution(randomEngine), uniformDistribution(randomEngine));
 
   spline.computeCoefficients(opts);

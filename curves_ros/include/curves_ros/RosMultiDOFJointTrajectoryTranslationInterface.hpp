@@ -18,8 +18,7 @@
 
 namespace curves {
 
-class RosMultiDOFJointTrajectoryTranslationInterface : public PolynomialSplineQuinticVector3Curve
-{
+class RosMultiDOFJointTrajectoryTranslationInterface : public PolynomialSplineQuinticVector3Curve {
  public:
   RosMultiDOFJointTrajectoryTranslationInterface();
   virtual ~RosMultiDOFJointTrajectoryTranslationInterface();
@@ -30,8 +29,7 @@ class RosMultiDOFJointTrajectoryTranslationInterface : public PolynomialSplineQu
    * @param message the ROS multi DOF trajectory message.
    * @param jointName the name of the joint to be copied.
    */
-  virtual bool fromMessage(const trajectory_msgs::MultiDOFJointTrajectory& message,
-                           const std::string& jointName);
+  virtual bool fromMessage(const trajectory_msgs::MultiDOFJointTrajectory& message, const std::string& jointName);
 };
 
-}  // namespace
+}  // namespace curves

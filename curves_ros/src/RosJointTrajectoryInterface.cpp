@@ -5,33 +5,24 @@
  *      Author: Peter Fankhauser
  */
 
-#include <curves_ros/RosJointTrajectoryInterface.hpp>
 #include <ros/ros.h>
+#include <curves_ros/RosJointTrajectoryInterface.hpp>
 
 // STD
 #include <vector>
 
 namespace curves {
 
-RosJointTrajectoryInterface::RosJointTrajectoryInterface() :
-    PolynomialSplineQuinticScalarCurve()
-{
+RosJointTrajectoryInterface::RosJointTrajectoryInterface() : PolynomialSplineQuinticScalarCurve() {}
 
-}
+RosJointTrajectoryInterface::~RosJointTrajectoryInterface() {}
 
-RosJointTrajectoryInterface::~RosJointTrajectoryInterface()
-{
-
-}
-
-bool RosJointTrajectoryInterface::fromMessage(const trajectory_msgs::JointTrajectory& message,
-                                              const std::string& jointName)
-{
+bool RosJointTrajectoryInterface::fromMessage(const trajectory_msgs::JointTrajectory& message, const std::string& jointName) {
   size_t nJoints = message.joint_names.size();
   size_t j = 0;
   for (; j < nJoints; ++j) {
     if (message.joint_names[j] == jointName) break;
-    if (j == nJoints - 1) return false; // Joint name not found.
+    if (j == nJoints - 1) return false;  // Joint name not found.
   }
 
   std::vector<Time> times;
@@ -49,4 +40,4 @@ bool RosJointTrajectoryInterface::fromMessage(const trajectory_msgs::JointTrajec
   return true;
 }
 
-}
+}  // namespace curves

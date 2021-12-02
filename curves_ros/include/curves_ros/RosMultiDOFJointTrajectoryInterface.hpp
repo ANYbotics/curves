@@ -18,8 +18,7 @@
 
 namespace curves {
 
-class RosMultiDOFJointTrajectoryInterface : public CubicHermiteSE3Curve
-{
+class RosMultiDOFJointTrajectoryInterface : public CubicHermiteSE3Curve {
  public:
   RosMultiDOFJointTrajectoryInterface();
   virtual ~RosMultiDOFJointTrajectoryInterface();
@@ -29,8 +28,7 @@ class RosMultiDOFJointTrajectoryInterface : public CubicHermiteSE3Curve
    * @param message the ROS multi DOF trajectory message.
    * @param jointName the name of the joint to be copied.
    */
-  virtual bool fromMessage(const trajectory_msgs::MultiDOFJointTrajectory& message,
-                           const std::string& jointName);
+  virtual bool fromMessage(const trajectory_msgs::MultiDOFJointTrajectory& message, const std::string& jointName);
 };
 
-}  // namespace
+}  // namespace curves

@@ -6,8 +6,8 @@
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#include <curves/KeyGenerator.hpp>
 #include <boost/thread.hpp>
+#include <curves/KeyGenerator.hpp>
 
 namespace curves {
 
@@ -18,4 +18,4 @@ size_t KeyGenerator::getNextKey() {
   return ++key;
 }
 
-} // namespace
+}  // namespace curves

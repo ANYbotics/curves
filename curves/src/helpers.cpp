@@ -4,36 +4,37 @@
  * @author Sean Andersson, Peter Fankhauser
  */
 
+#include <glog/logging.h>
 #include <curves/helpers.hpp>
 #include <fstream>
-#include <glog/logging.h>
-
 
 namespace curves {
 
 template <typename T>
 std::string toString(const T& t) {
-  std::ostringstream ss; ss<<t; return ss.str();
+  std::ostringstream ss;
+  ss << t;
+  return ss.str();
 }
 /// \brief Helper function to read CSV files into 'matrix' of strings
 std::vector<std::vector<std::string> > loadCSV(std::string fileName) {
   // Open file stream and check that it is error free
-  std::ifstream inFileStream( fileName.c_str() );
+  std::ifstream inFileStream(fileName.c_str());
   CHECK(inFileStream.good()) << "error opening input file " << fileName;
   // Create output variable
   std::vector<std::vector<std::string> > strMatrix;
   // Loop over lines (rows) of CSV file
   std::string line;
-  while(std::getline(inFileStream, line)) {
+  while (std::getline(inFileStream, line)) {
     // Make string stream out of line
     std::istringstream ss(line);
     std::vector<std::string> strRow;
     // Loop over comma separated fields of CSV line
     std::string field;
-    while (getline(ss, field,',')) {
-      strRow.push_back(field); // add column entry to row
+    while (getline(ss, field, ',')) {
+      strRow.push_back(field);  // add column entry to row
     }
-    strMatrix.push_back(strRow); // add row to matrix
+    strMatrix.push_back(strRow);  // add row to matrix
   }
   inFileStream.close();
   return strMatrix;
@@ -44,7 +45,7 @@ void writeCSV(std::string fileName, const std::vector<std::vector<std::string> >
   std::ofstream outFileStream;
   outFileStream.open(fileName.c_str());
   // Iterate over the rows of the string matrix and write comma-separated fields
-  for (std::vector<std::vector<std::string> >::const_iterator itRow = strMatrix.begin() ; itRow != strMatrix.end(); ++itRow) {
+  for (std::vector<std::vector<std::string> >::const_iterator itRow = strMatrix.begin(); itRow != strMatrix.end(); ++itRow) {
     const unsigned fields = itRow->size();
     CHECK_GE(fields, 1) << "String matrix row has no entries.";
     outFileStream << itRow->at(0);
@@ -70,7 +71,7 @@ void loadTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes
   const unsigned vOffset = 1;
   const unsigned vDim = temp.at(0).size() - vOffset;
   Eigen::VectorXd tempVec(vDim);
-  for (std::vector<std::vector<std::string> >::iterator it = temp.begin() ; it != temp.end(); ++it) {
+  for (std::vector<std::vector<std::string> >::iterator it = temp.begin(); it != temp.end(); ++it) {
     outTimes->push_back((curves::Time)atof(it->at(1).c_str()));
     for (unsigned vIdx = 0; vIdx < vDim; vIdx++) {
       tempVec[vIdx] = atof(it->at(vIdx + vOffset).c_str());
@@ -103,7 +104,8 @@ void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& t
   writeCSV(fileName, strMatrix);
 }
 /// \brief Helper function to read CSV files formatted in: time0, time1, vectorEntry0, vectorEntry1, ...
-void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes0, std::vector<curves::Time>* outTimes1, std::vector<Eigen::VectorXd>* outValues) {
+void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes0, std::vector<curves::Time>* outTimes1,
+                           std::vector<Eigen::VectorXd>* outValues) {
   // Initialize outputs
   CHECK_NOTNULL(outTimes0);
   outTimes0->clear();
@@ -119,7 +121,7 @@ void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outT
   const unsigned vOffset = 2;
   const unsigned vDim = temp.at(0).size() - vOffset;
   Eigen::VectorXd tempVec(vDim);
-  for (std::vector<std::vector<std::string> >::iterator it = temp.begin() ; it != temp.end(); ++it) {
+  for (std::vector<std::vector<std::string> >::iterator it = temp.begin(); it != temp.end(); ++it) {
     outTimes0->push_back((curves::Time)atof(it->at(1).c_str()));
     outTimes1->push_back((curves::Time)atof(it->at(2).c_str()));
     for (unsigned vIdx = 0; vIdx < vDim; vIdx++) {
@@ -129,4 +131,4 @@ void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outT
   }
 }
 
-}
+}  // namespace curves

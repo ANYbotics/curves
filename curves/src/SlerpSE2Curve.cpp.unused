@@ -4,14 +4,13 @@
  * @author Renaud Dubé, Abel Gawel
  */
 
-#include <curves/SlerpSE2Curve.hpp>
 #include <curves/Pose2_Expressions.hpp>
+#include <curves/SlerpSE2Curve.hpp>
 #include <curves/helpers.hpp>
 
 #include <iostream>
 
-#include "gtsam/nonlinear/ExpressionFactor.h"
-
+#include <gtsam/nonlinear/ExpressionFactor.h>
 
 namespace curves {
 
@@ -24,32 +23,32 @@ void SlerpSE2Curve::print(const std::string& str) const {
   std::cout << "=========== Slerp SE2 CURVE =============" << std::endl;
   std::cout << str << std::endl;
   std::cout << "num of coefficients: " << manager_.size() << std::endl;
-  std::cout << "dimension: " <<  3 << std::endl;
+  std::cout << "dimension: " << 3 << std::endl;
   std::stringstream ss;
   std::vector<Key> keys;
   std::vector<Time> times;
   manager_.getTimes(&times);
   manager_.getKeys(&keys);
-  std::cout << "curve defined between times: " << manager_.getMinTime() <<
-      " and " << manager_.getMaxTime() <<std::endl;
+  std::cout << "curve defined between times: " << manager_.getMinTime() << " and " << manager_.getMaxTime() << std::endl;
   double sum_dp = 0;
   Eigen::Vector2d p1, p2;
-  for(size_t i = 0; i < times.size()-1; ++i) {
+  for (size_t i = 0; i < times.size() - 1; ++i) {
     p1 = evaluate(times[i]).t().vector();
-    p2 = evaluate(times[i+1]).t().vector();
-    sum_dp += (p1-p2).norm();
+    p2 = evaluate(times[i + 1]).t().vector();
+    sum_dp += (p1 - p2).norm();
   }
-  std::cout << "average dt between coefficients: " << (manager_.getMaxTime() -manager_.getMinTime())  / (times.size()-1) << " ns." << std::endl;
-  std::cout << "average distance between coefficients: " << sum_dp / double((times.size()-1))<< " m." << std::endl;
-  std::cout <<"=========================================" <<std::endl;
+  std::cout << "average dt between coefficients: " << (manager_.getMaxTime() - manager_.getMinTime()) / (times.size() - 1) << " ns."
+            << std::endl;
+  std::cout << "average distance between coefficients: " << sum_dp / double((times.size() - 1)) << " m." << std::endl;
+  std::cout << "=========================================" << std::endl;
   for (size_t i = 0; i < manager_.size(); i++) {
     ss << "coefficient " << keys[i] << ": ";
-    gtsam::traits<Coefficient>::Print(manager_.getCoefficientByKey(keys[i]),ss.str());
+    gtsam::traits<Coefficient>::Print(manager_.getCoefficientByKey(keys[i]), ss.str());
     std::cout << " | time: " << times[i];
     std::cout << std::endl;
     ss.str("");
   }
-  std::cout <<"=========================================" <<std::endl;
+  std::cout << "=========================================" << std::endl;
 }
 
 Time SlerpSE2Curve::getMaxTime() const {
@@ -68,46 +67,38 @@ int SlerpSE2Curve::size() const {
   return manager_.size();
 }
 
-void SlerpSE2Curve::fitCurve(const std::vector<Time>& times,
-                             const std::vector<ValueType>& values,
-                             std::vector<Key>* outKeys) {
+void SlerpSE2Curve::fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys) {
   CHECK_EQ(times.size(), values.size());
-  if(times.size() > 0) {
+  if (times.size() > 0) {
     clear();
-    manager_.insertCoefficients(times,values, outKeys);
+    manager_.insertCoefficients(times, values, outKeys);
   }
 }
 
-void SlerpSE2Curve::setCurve(const std::vector<Time>& times,
-              const std::vector<ValueType>& values) {
+void SlerpSE2Curve::setCurve(const std::vector<Time>& times, const std::vector<ValueType>& values) {
   CHECK_EQ(times.size(), values.size());
-  if(times.size() > 0) {
-    manager_.insertCoefficients(times,values);
+  if (times.size() > 0) {
+    manager_.insertCoefficients(times, values);
   }
 }
 
-void SlerpSE2Curve::extend(const std::vector<Time>& times,
-                           const std::vector<ValueType>& values,
-                           std::vector<Key>* outKeys) {
-
+void SlerpSE2Curve::extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys) {
   CHECK_EQ(times.size(), values.size()) << "number of times and number of coefficients don't match";
   slerpPolicy_.extend<SlerpSE2Curve, ValueType>(times, values, this, outKeys);
 }
 
-typename SlerpSE2Curve::DerivativeType
-SlerpSE2Curve::evaluateDerivative(Time time,
-                                  unsigned derivativeOrder) const {
+typename SlerpSE2Curve::DerivativeType SlerpSE2Curve::evaluateDerivative(Time time, unsigned derivativeOrder) const {
   CHECK(false) << "Not implemented";
 }
 
 /// \brief \f[T^{\alpha}\f]
-SE2 transformationPower(SE2  T, double alpha) {
+SE2 transformationPower(SE2 T, double alpha) {
   CHECK(false) << "Not implemented";
 }
 
 /// \brief \f[A*B\f]
 SE2 composeTransformations(SE2 A, SE2 B) {
-  return A*B;
+  return A * B;
 }
 
 /// \brief \f[T^{-1}\f]
@@ -118,9 +109,7 @@ SE2 inverseTransformation(SE2 T) {
 /// \brief forms slerp interpolation into a binary expression with 2 leafs and binds alpha into it,
 ///        uses break down of expression into its operations
 ///        \f[ T = A(A^{-1}B)^{\alpha} \f]
-gtsam::Expression<typename SlerpSE2Curve::ValueType>
-SlerpSE2Curve::getValueExpression(const Time& time) const {
-
+gtsam::Expression<typename SlerpSE2Curve::ValueType> SlerpSE2Curve::getValueExpression(const Time& time) const {
   typedef typename SlerpSE2Curve::ValueType ValueType;
   using namespace gtsam;
   CoefficientIter rval0, rval1;
@@ -128,7 +117,7 @@ SlerpSE2Curve::getValueExpression(const Time& time) const {
   CHECK(success) << "Unable to get the coefficients at time " << time;
   Expression<ValueType> leaf1(rval0->second.key);
   Expression<ValueType> leaf2(rval1->second.key);
-  double alpha = double(time - rval0->first)/double(rval1->first - rval0->first);
+  double alpha = double(time - rval0->first) / double(rval1->first - rval0->first);
 
   if (alpha == 0) {
     return leaf1;
@@ -146,8 +135,8 @@ SlerpSE2Curve::getValueExpression(const Time& time) const {
   }
 }
 
-gtsam::Expression<typename SlerpSE2Curve::DerivativeType>
-SlerpSE2Curve::getDerivativeExpression(const Time& time, unsigned derivativeOrder) const {
+gtsam::Expression<typename SlerpSE2Curve::DerivativeType> SlerpSE2Curve::getDerivativeExpression(const Time& time,
+                                                                                                 unsigned derivativeOrder) const {
   // \todo Abel and Renaud
   CHECK(false) << "Not implemented";
 }
@@ -166,12 +155,12 @@ SE2 SlerpSE2Curve::evaluate(Time time) const {
       CHECK(success) << "Unable to get the coefficients at time " << time;
       SE2 T_W_A = a->second.coefficient;
       SE2 T_W_B = b->second.coefficient;
-      double alpha = double(time - a->first)/double(b->first - a->first);
+      double alpha = double(time - a->first) / double(b->first - a->first);
 
-      //Implementation of T_W_I = T_W_A*exp(alpha*log(inv(T_W_A)*T_W_B))
+      // Implementation of T_W_I = T_W_A*exp(alpha*log(inv(T_W_A)*T_W_B))
       SE2 T_A_B = T_W_A.inverse() * T_W_B;
       gtsam::Vector3 log_T_A_B = gtsam::Pose2::Logmap(T_A_B);
-      gtsam::Vector3 log_T_A_I = log_T_A_B*alpha;
+      gtsam::Vector3 log_T_A_I = log_T_A_B * alpha;
       SE2 T_A_I = gtsam::Pose2::Expmap(log_T_A_I);
       return T_W_A * T_A_I;
     }
@@ -209,23 +198,18 @@ void SlerpSE2Curve::clear() {
 }
 
 void SlerpSE2Curve::addPriorFactors(gtsam::NonlinearFactorGraph* graph, Time priorTime) const {
-  Eigen::Matrix<double,3,1> noise;
+  Eigen::Matrix<double, 3, 1> noise;
   noise(0) = 0.0000001;
   noise(1) = 0.0000001;
   noise(2) = 0.0000001;
 
-  gtsam::noiseModel::Diagonal::shared_ptr priorNoise = gtsam::noiseModel::Diagonal::
-        Sigmas(noise);
+  gtsam::noiseModel::Diagonal::shared_ptr priorNoise = gtsam::noiseModel::Diagonal::Sigmas(noise);
 
   CoefficientIter rVal0, rVal1;
   manager_.getCoefficientsAt(priorTime, &rVal0, &rVal1);
 
-  gtsam::ExpressionFactor<Coefficient> f0(priorNoise,
-                                          rVal0->second.coefficient,
-                                          gtsam::Expression<Coefficient>(rVal0->second.key));
-  gtsam::ExpressionFactor<Coefficient> f1(priorNoise,
-                                          rVal1->second.coefficient,
-                                          gtsam::Expression<Coefficient>(rVal1->second.key));
+  gtsam::ExpressionFactor<Coefficient> f0(priorNoise, rVal0->second.coefficient, gtsam::Expression<Coefficient>(rVal0->second.key));
+  gtsam::ExpressionFactor<Coefficient> f1(priorNoise, rVal1->second.coefficient, gtsam::Expression<Coefficient>(rVal1->second.key));
   graph->push_back(f0);
   graph->push_back(f1);
 }
@@ -235,7 +219,7 @@ void SlerpSE2Curve::transformCurve(const ValueType T) {
   manager_.getTimes(&coefTimes);
   for (size_t i = 0; i < coefTimes.size(); ++i) {
     // Apply a rigid transformation to every coefficient (on the left side).
-    manager_.insertCoefficient(coefTimes[i],T*evaluate(coefTimes[i]));
+    manager_.insertCoefficient(coefTimes[i], T * evaluate(coefTimes[i]));
   }
 }
 
@@ -260,4 +244,4 @@ void SlerpSE2Curve::saveCurveTimesAndValues(const std::string& filename) const {
   writeTimeVectorCSV(filename, curveTimes, curveValues);
 }
 
-} // namespace curves
+}  // namespace curves

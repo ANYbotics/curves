@@ -12,11 +12,11 @@
 
 using namespace curves;
 
-typedef typename curves::PolynomialSplineQuinticVector3Curve::ValueType ValueType; // kindr::HomogeneousTransformationPosition3RotationQuaternionD ValueType
+typedef typename curves::PolynomialSplineQuinticVector3Curve::ValueType
+    ValueType;  // kindr::HomogeneousTransformationPosition3RotationQuaternionD ValueType
 typedef typename curves::Time Time;
 
-TEST(PolynomialSplineQuinticVector3Curve, Debugging)
-{
+TEST(PolynomialSplineQuinticVector3Curve, Debugging) {
   PolynomialSplineQuinticVector3Curve curve;
   std::vector<Time> times;
   std::vector<ValueType> values;
@@ -32,14 +32,14 @@ TEST(PolynomialSplineQuinticVector3Curve, Debugging)
 
   curve.fitCurve(times, values);
 
-//  for (double t = times[0]; t <= times[3]; t += 0.0025) {
-//    std::cout << t << " " << curve.evaluate(t).x() << " " << curve.evaluate(t).y() << " " << curve.evaluate(t).z() << std::endl;
-//  }
-//
-//  EXPECT_EQ(ValueType::Position(), curve.evaluate(0.0).getPosition());
-//  EXPECT_EQ(ValueType::Rotation(), curve.evaluate(0.0).getRotation());
-//  EXPECT_EQ(ValueType::Position(), curve.evaluate(0.5).getPosition());
-//  EXPECT_EQ(ValueType::Rotation(), curve.evaluate(0.5).getRotation());
-//  EXPECT_EQ(ValueType::Position(), curve.evaluate(1.0).getPosition());
-//  EXPECT_EQ(ValueType::Rotation(), curve.evaluate(1.0).getRotation());
+  //  for (double t = times[0]; t <= times[3]; t += 0.0025) {
+  //    std::cout << t << " " << curve.evaluate(t).x() << " " << curve.evaluate(t).y() << " " << curve.evaluate(t).z() << std::endl;
+  //  }
+  //
+  //  EXPECT_EQ(ValueType::Position(), curve.evaluate(0.0).getPosition());
+  //  EXPECT_EQ(ValueType::Rotation(), curve.evaluate(0.0).getRotation());
+  //  EXPECT_EQ(ValueType::Position(), curve.evaluate(0.5).getPosition());
+  //  EXPECT_EQ(ValueType::Rotation(), curve.evaluate(0.5).getRotation());
+  //  EXPECT_EQ(ValueType::Position(), curve.evaluate(1.0).getPosition());
+  //  EXPECT_EQ(ValueType::Rotation(), curve.evaluate(1.0).getRotation());
 }

@@ -16,19 +16,17 @@ namespace curves {
 typedef double Time;
 typedef size_t Key;
 
-template<typename CurveConfig>
-class Curve
-{
+template <typename CurveConfig>
+class Curve {
  public:
-
   /// The value type of the curve.
   typedef typename CurveConfig::ValueType ValueType;
 
   /// The curve's derivative type.
   typedef typename CurveConfig::DerivativeType DerivativeType;
 
-  Curve() { }
-  virtual ~Curve() { }
+  Curve() {}
+  virtual ~Curve() {}
 
   ///\defgroup Info
   ///\name Methods to get information about the curve.
@@ -38,7 +36,7 @@ class Curve
   virtual void print(const std::string& str = "") const = 0;
 
   /// \brief The dimension of the underlying manifold
-  //size_t dim() const;  // get this form the curve's value type
+  // size_t dim() const;  // get this form the curve's value type
 
   /// The first valid time of the curve.
   virtual Time getMinTime() const = 0;
@@ -53,7 +51,7 @@ class Curve
   /// Evaluate the ambient space of the curve.
   virtual bool evaluate(ValueType& value, Time time) const = 0;
 
-//  /// Evaluate the curve derivatives.
+  //  /// Evaluate the curve derivatives.
   virtual bool evaluateDerivative(DerivativeType& derivative, Time time, unsigned derivativeOrder) const = 0;
 
   ///@}
@@ -64,25 +62,21 @@ class Curve
   /// Extend the curve so that it can be evaluated at these times.
   /// Try to make the curve fit to the values.
   /// Underneath the curve should have some default policy for fitting.
-  virtual void extend(const std::vector<Time>& times,
-                      const std::vector<ValueType>& values,
-                      std::vector<Key>* outKeys = NULL) = 0;
+  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL) = 0;
 
   /// \brief Fit a new curve to these data points.
   ///
   /// The existing curve will be cleared.
   /// Underneath the curve should have some default policy for fitting.
-  virtual void fitCurve(const std::vector<Time>& times,
-                        const std::vector<ValueType>& values,
-                        std::vector<Key>* outKeys = NULL) = 0;
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL) = 0;
 
   ///@}
 
-   /// \brief Clear all the curve coefficients
-   virtual void clear() = 0;
+  /// \brief Clear all the curve coefficients
+  virtual void clear() = 0;
 
-   /// \brief Perform a rigid transformation on the left side of the curve
-   virtual void transformCurve(const ValueType T) = 0;
+  /// \brief Perform a rigid transformation on the left side of the curve
+  virtual void transformCurve(const ValueType T) = 0;
 };
 
-}  // namespace
+}  // namespace curves

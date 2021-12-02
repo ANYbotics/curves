@@ -7,8 +7,8 @@
 #ifndef SE2CONFIG_H_
 #define SE2CONFIG_H_
 
+#include <gtsam/geometry/Pose2.h>
 #include <Eigen/Core>
-#include "gtsam/geometry/Pose2.h"
 
 namespace curves {
 
@@ -21,4 +21,4 @@ struct SE2Config {
 
 }  // namespace curves
 
-#endif // SE2CONFIG_H_
+#endif  // SE2CONFIG_H_

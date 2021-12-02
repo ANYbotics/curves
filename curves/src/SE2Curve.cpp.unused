@@ -8,8 +8,8 @@
 
 namespace curves {
 
-SE2Curve::SE2Curve(){}
+SE2Curve::SE2Curve() {}
 
-SE2Curve::~SE2Curve(){}
+SE2Curve::~SE2Curve() {}
 
 }  // namespace curves

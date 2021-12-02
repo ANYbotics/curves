@@ -18,8 +18,7 @@
 
 namespace curves {
 
-class RosJointTrajectoryInterface : public PolynomialSplineQuinticScalarCurve
-{
+class RosJointTrajectoryInterface : public PolynomialSplineQuinticScalarCurve {
  public:
   RosJointTrajectoryInterface();
   virtual ~RosJointTrajectoryInterface();
@@ -32,4 +31,4 @@ class RosJointTrajectoryInterface : public PolynomialSplineQuinticScalarCurve
   bool fromMessage(const trajectory_msgs::JointTrajectory& message, const std::string& jointName);
 };
 
-}  // namespace
+}  // namespace curves

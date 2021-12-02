@@ -7,8 +7,8 @@
 #ifndef SE2_CURVE_H_
 #define SE2_CURVE_H_
 
-#include "SE2Config.hpp"
 #include "Curve.hpp"
+#include "SE2Config.hpp"
 
 namespace curves {
 
@@ -27,9 +27,8 @@ class SE2Curve : public Curve<SE2Config> {
   typedef Curve<SE2Config> Parent;
   typedef Parent::ValueType ValueType;
   typedef Parent::DerivativeType DerivativeType;
-
 };
 
 }  // namespace curves
 
-#endif // SE2_CURVE_H_
+#endif  // SE2_CURVE_H_
