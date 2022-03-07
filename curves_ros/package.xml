@@ -9,6 +9,7 @@
   <url>https://github.com/anybotics/curves</url>
   <author email="pfankhauser@anybotics.com">Péter Fankhauser</author>
   <buildtool_depend>catkin</buildtool_depend>
+<!--   <build_depend>cmake_clang_tools</build_depend> -->
   <depend>roscpp</depend>
   <depend>curves</depend>
   <depend>kindr_ros</depend>
