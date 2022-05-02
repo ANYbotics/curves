@@ -66,7 +66,7 @@ TEST(PolynomialSplineContainer, eval) {
   curves::PolynomialSplineContainerQuintic polyContainer;
   polyContainer.setData(knotPos, knotVal, initialVelocity, initialAcceleration, finalVelocity, finalAcceleration);
 
-  for (int i = 0; i < knotVal.size() - 1; i++) {
+  for (unsigned int i = 0; i < knotVal.size() - 1; i++) {
     EXPECT_NEAR(knotVal[i], polyContainer.getSpline(i)->getPositionAtTime(0.0), 1e-2) << " knot:" << i;
     EXPECT_NEAR(knotVal[i + 1], polyContainer.getSpline(i)->getPositionAtTime(knotPos[i + 1] - knotPos[i]), 1e-2) << " knot:" << i;
   }
@@ -102,8 +102,6 @@ TEST(PolynomialSplineContainer, getState) {
 
   constexpr double containerTime = 0.4;
   polyContainer.setContainerTime(containerTime);
-
-  double timeOffset = 0.0;
 
   EXPECT_EQ(polyContainer.getPosition(), polyContainer.getPositionAtTime(containerTime));
   EXPECT_EQ(polyContainer.getVelocity(), polyContainer.getVelocityAtTime(containerTime));

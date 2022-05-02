@@ -4,9 +4,11 @@
  * @author Sean Andersson, Peter Fankhauser
  */
 
-#include <glog/logging.h>
-#include <curves/helpers.hpp>
 #include <fstream>
+
+#include <glog/logging.h>
+
+#include <curves/helpers.hpp>
 
 namespace curves {
 
@@ -16,6 +18,7 @@ std::string toString(const T& t) {
   ss << t;
   return ss.str();
 }
+
 /// \brief Helper function to read CSV files into 'matrix' of strings
 std::vector<std::vector<std::string> > loadCSV(std::string fileName) {
   // Open file stream and check that it is error free
@@ -39,23 +42,25 @@ std::vector<std::vector<std::string> > loadCSV(std::string fileName) {
   inFileStream.close();
   return strMatrix;
 }
+
 /// \brief Helper function to write 'matrix' of strings into CSV file
 void writeCSV(std::string fileName, const std::vector<std::vector<std::string> >& strMatrix) {
   CHECK_GE(strMatrix.size(), 1) << "Provided matrix of strings had no entries.";
   std::ofstream outFileStream;
   outFileStream.open(fileName.c_str());
   // Iterate over the rows of the string matrix and write comma-separated fields
-  for (std::vector<std::vector<std::string> >::const_iterator itRow = strMatrix.begin(); itRow != strMatrix.end(); ++itRow) {
-    const unsigned fields = itRow->size();
+  for (const auto& itRow : strMatrix) {
+    const unsigned fields = itRow.size();
     CHECK_GE(fields, 1) << "String matrix row has no entries.";
-    outFileStream << itRow->at(0);
+    outFileStream << itRow.at(0);
     for (unsigned i = 1; i < fields; i++) {
-      outFileStream << "," << itRow->at(i);
+      outFileStream << "," << itRow.at(i);
     }
     outFileStream << std::endl;
   }
   outFileStream.close();
 }
+
 /// \brief Helper function to read CSV files formatted in: time, vectorEntry0, vectorEntry1, ...
 void loadTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes, std::vector<Eigen::VectorXd>* outValues) {
   // Initialize outputs
@@ -71,14 +76,15 @@ void loadTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes
   const unsigned vOffset = 1;
   const unsigned vDim = temp.at(0).size() - vOffset;
   Eigen::VectorXd tempVec(vDim);
-  for (std::vector<std::vector<std::string> >::iterator it = temp.begin(); it != temp.end(); ++it) {
-    outTimes->push_back((curves::Time)atof(it->at(1).c_str()));
+  for (const auto& it : temp) {
+    outTimes->push_back((curves::Time)atof(it.at(1).c_str()));
     for (unsigned vIdx = 0; vIdx < vDim; vIdx++) {
-      tempVec[vIdx] = atof(it->at(vIdx + vOffset).c_str());
+      tempVec[vIdx] = atof(it.at(vIdx + vOffset).c_str());
     }
     outValues->push_back(tempVec);
   }
 }
+
 /// \brief Helper function to write CSV file formatted in: time, vectorEntry0, vectorEntry1, ...
 void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& times, const std::vector<Eigen::VectorXd>& values) {
   // Check inputs and initialize sizes
@@ -103,6 +109,7 @@ void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& t
   // Write
   writeCSV(fileName, strMatrix);
 }
+
 /// \brief Helper function to read CSV files formatted in: time0, time1, vectorEntry0, vectorEntry1, ...
 void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes0, std::vector<curves::Time>* outTimes1,
                            std::vector<Eigen::VectorXd>* outValues) {
@@ -121,11 +128,11 @@ void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outT
   const unsigned vOffset = 2;
   const unsigned vDim = temp.at(0).size() - vOffset;
   Eigen::VectorXd tempVec(vDim);
-  for (std::vector<std::vector<std::string> >::iterator it = temp.begin(); it != temp.end(); ++it) {
-    outTimes0->push_back((curves::Time)atof(it->at(1).c_str()));
-    outTimes1->push_back((curves::Time)atof(it->at(2).c_str()));
+  for (const auto& it : temp) {
+    outTimes0->push_back((curves::Time)atof(it.at(1).c_str()));
+    outTimes1->push_back((curves::Time)atof(it.at(2).c_str()));
     for (unsigned vIdx = 0; vIdx < vDim; vIdx++) {
-      tempVec[vIdx] = atof(it->at(vIdx + vOffset).c_str());
+      tempVec[vIdx] = atof(it.at(vIdx + vOffset).c_str());
     }
     outValues->push_back(tempVec);
   }

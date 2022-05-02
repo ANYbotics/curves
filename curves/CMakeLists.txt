@@ -48,7 +48,6 @@ add_library(${PROJECT_NAME}
   src/CubicHermiteSE3Curve.cpp
   src/CubicHermiteE3Curve.cpp
   src/SlerpSE3Curve.cpp
-  src/SE3Curve.cpp
   src/polynomial_splines_traits.cpp
   src/helpers.cpp
 )

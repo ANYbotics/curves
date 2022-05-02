@@ -28,11 +28,10 @@ class LocalSupport2CoefficientManager {
     CoefficientType coefficient;
 
     KeyCoefficient(const Key key, const Coefficient& coefficient) : key(key), coefficient(coefficient) {}
-
-    KeyCoefficient() {}
+    KeyCoefficient() = default;
 
     bool equals(const KeyCoefficient& other) const {
-      // todo Note: here we assume that == operator is implemented by the coefficient.
+      // TODO Note: here we assume that == operator is implemented by the coefficient.
       // Could not use gtsam traits as the gtsam namespace is not visible to this class.
       // Is this correct?
       return key == other.key && coefficient == other.coefficient;
@@ -46,11 +45,10 @@ class LocalSupport2CoefficientManager {
   /// Key/Coefficient pairs
   typedef boost::unordered_map<size_t, Coefficient> CoefficientMap;
 
-  LocalSupport2CoefficientManager();
-  virtual ~LocalSupport2CoefficientManager();
+  virtual ~LocalSupport2CoefficientManager() = default;
 
   /// Compare this Coefficient manager with another for equality.
-  bool equals(const LocalSupport2CoefficientManager& other, double tol = 1e-9) const;
+  bool equals(const LocalSupport2CoefficientManager& other) const;
 
   /// Print the value of the coefficient, for debugging and unit tests
   void print(const std::string& str = "") const;
@@ -170,7 +168,7 @@ class LocalSupport2CoefficientManager {
 
  private:
   /// Key to coefficient mapping
-  boost::unordered_map<Key, CoefficientIter> keyToCoefficient_;
+  boost::unordered_map<Key, typename TimeToKeyCoefficientMap::iterator> keyToCoefficient_;
 
   /// Time to coefficient mapping
   TimeToKeyCoefficientMap timeToCoefficient_;

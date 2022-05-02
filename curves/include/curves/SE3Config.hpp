@@ -16,8 +16,8 @@ namespace curves {
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 
 struct SE3Config {
-  typedef kindr::HomTransformQuatD ValueType;
-  typedef kindr::TwistGlobalD DerivativeType;
+  using ValueType = kindr::HomTransformQuatD;
+  using DerivativeType = kindr::TwistGlobalD;
 };
 
 }  // namespace curves

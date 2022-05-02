@@ -12,13 +12,11 @@
 
 using namespace curves;
 
-typedef typename curves::PolynomialSplineQuinticVector3Curve::ValueType
-    ValueType;  // kindr::HomogeneousTransformationPosition3RotationQuaternionD ValueType
-typedef typename curves::Time Time;
+typedef typename curves::PolynomialSplineQuinticVector3Curve::ValueType ValueType;
 
 TEST(PolynomialSplineQuinticVector3Curve, Debugging) {
   PolynomialSplineQuinticVector3Curve curve;
-  std::vector<Time> times;
+  std::vector<curves::Time> times;
   std::vector<ValueType> values;
 
   times.push_back(0.0);
@@ -33,7 +31,8 @@ TEST(PolynomialSplineQuinticVector3Curve, Debugging) {
   curve.fitCurve(times, values);
 
   //  for (double t = times[0]; t <= times[3]; t += 0.0025) {
-  //    std::cout << t << " " << curve.evaluate(t).x() << " " << curve.evaluate(t).y() << " " << curve.evaluate(t).z() << std::endl;
+  //    std::cout << t << " " << curve.evaluate(t).x() << " " <<
+  //    curve.evaluate(t).y() << " " << curve.evaluate(t).z() << std::endl;
   //  }
   //
   //  EXPECT_EQ(ValueType::Position(), curve.evaluate(0.0).getPosition());

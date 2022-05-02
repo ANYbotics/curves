@@ -10,88 +10,84 @@
 
 #include <kindr/Core>
 #include <kindr/common/gtest_eigen.hpp>
-#include <limits>
-#include "curves/CubicHermiteSE3Curve.hpp"
 
-typedef std::numeric_limits<double> dbl;
+#include "curves/CubicHermiteSE3Curve.hpp"
 
 using namespace curves;
 
-typedef typename curves::CubicHermiteSE3Curve::ValueType ValueType;
-typedef typename curves::CubicHermiteSE3Curve::DerivativeType DerivativeType;
-typedef typename curves::Time Time;
+typedef typename curves::CubicHermiteSE3Curve::ValueType VType;
 
 TEST(Evaluate, IdentityPoses) {
   CubicHermiteSE3Curve curve;
-  std::vector<Time> times;
-  std::vector<ValueType> values;
+  std::vector<curves::Time> times;
+  std::vector<VType> values;
 
   times.push_back(0.0);
-  values.push_back(ValueType());
+  values.push_back(VType());
   times.push_back(1.0);
-  values.push_back(ValueType());
+  values.push_back(VType());
   curve.fitCurve(times, values);
 
-  ValueType value;
+  VType value;
 
-  value.getPosition() = ValueType::Position(0.2, 3.4, 4.6);
-  value.getRotation() = ValueType::Rotation(kindr::EulerAnglesZyxD(0.3, 2.3, 4.3));
+  value.getPosition() = VType::Position(0.2, 3.4, 4.6);
+  value.getRotation() = VType::Rotation(kindr::EulerAnglesZyxD(0.3, 2.3, 4.3));
   ASSERT_TRUE(curve.evaluate(value, 0.0));
-  EXPECT_EQ(ValueType::Position(), value.getPosition());
-  EXPECT_EQ(ValueType::Rotation(), value.getRotation());
+  EXPECT_EQ(VType::Position(), value.getPosition());
+  EXPECT_EQ(VType::Rotation(), value.getRotation());
 
-  value.getPosition() = ValueType::Position(0.2, 3.4, 4.6);
-  value.getRotation() = ValueType::Rotation(kindr::EulerAnglesZyxD(0.3, 2.3, 4.3));
+  value.getPosition() = VType::Position(0.2, 3.4, 4.6);
+  value.getRotation() = VType::Rotation(kindr::EulerAnglesZyxD(0.3, 2.3, 4.3));
   ASSERT_TRUE(curve.evaluate(value, 0.5));
-  EXPECT_EQ(ValueType::Position(), value.getPosition());
-  EXPECT_EQ(ValueType::Rotation(), value.getRotation());
+  EXPECT_EQ(VType::Position(), value.getPosition());
+  EXPECT_EQ(VType::Rotation(), value.getRotation());
 
-  value.getPosition() = ValueType::Position(0.2, 3.4, 4.6);
-  value.getRotation() = ValueType::Rotation(kindr::EulerAnglesZyxD(0.3, 2.3, 4.3));
+  value.getPosition() = VType::Position(0.2, 3.4, 4.6);
+  value.getRotation() = VType::Rotation(kindr::EulerAnglesZyxD(0.3, 2.3, 4.3));
   ASSERT_TRUE(curve.evaluate(value, 1.0));
-  EXPECT_EQ(ValueType::Position(), value.getPosition());
-  EXPECT_EQ(ValueType::Rotation(), value.getRotation());
+  EXPECT_EQ(VType::Position(), value.getPosition());
+  EXPECT_EQ(VType::Rotation(), value.getRotation());
 }
 
 TEST(Evaluate, TranslationOnly) {
   CubicHermiteSE3Curve curve;
-  std::vector<Time> times;
-  std::vector<ValueType> values;
+  std::vector<curves::Time> times;
+  std::vector<VType> values;
 
   times.push_back(0.0);
-  values.push_back(ValueType(ValueType::Position(-10.0, 10.0, 10.0), ValueType::Rotation()));
+  values.push_back(VType(VType::Position(-10.0, 10.0, 10.0), VType::Rotation()));
   times.push_back(1.0);
-  values.push_back(ValueType(ValueType::Position(10.0, -10.0, -10.0), ValueType::Rotation()));
+  values.push_back(VType(VType::Position(10.0, -10.0, -10.0), VType::Rotation()));
   curve.fitCurve(times, values);
 
-  ValueType value;
+  VType value;
 
   ASSERT_TRUE(curve.evaluate(value, 0.0));
   EXPECT_EQ(values[0].getPosition(), value.getPosition());
-  EXPECT_EQ(ValueType::Rotation(), value.getRotation());
+  EXPECT_EQ(VType::Rotation(), value.getRotation());
 
   ASSERT_TRUE(curve.evaluate(value, 0.5));
-  EXPECT_EQ(ValueType::Position(0.0, 0.0, 0.0), value.getPosition());
-  EXPECT_EQ(ValueType::Rotation(), value.getRotation());
+  EXPECT_EQ(VType::Position(0.0, 0.0, 0.0), value.getPosition());
+  EXPECT_EQ(VType::Rotation(), value.getRotation());
 
   ASSERT_TRUE(curve.evaluate(value, 1.0));
   EXPECT_EQ(values[1].getPosition(), value.getPosition());
-  EXPECT_EQ(ValueType::Rotation(), value.getRotation());
+  EXPECT_EQ(VType::Rotation(), value.getRotation());
 }
 
 TEST(InvarianceUnderCoordinateTransformation, Translation) {
   CubicHermiteSE3Curve curve1;
-  std::vector<Time> times;
-  std::vector<ValueType> values1;
+  std::vector<curves::Time> times;
+  std::vector<VType> values1;
   times.push_back(0.0);
-  values1.push_back(ValueType(ValueType::Position(-1.0, 0.1, 10.0), ValueType::Rotation()));
+  values1.push_back(VType(VType::Position(-1.0, 0.1, 10.0), VType::Rotation()));
   times.push_back(5.0);
-  values1.push_back(ValueType(ValueType::Position(1.0, 0.2, 5.0), ValueType::Rotation()));
+  values1.push_back(VType(VType::Position(1.0, 0.2, 5.0), VType::Rotation()));
   curve1.fitCurve(times, values1);
 
   CubicHermiteSE3Curve curve2;
-  ValueType::Position offset(10.0, 10.0, 10.0);
-  std::vector<ValueType> values2;
+  VType::Position offset(10.0, 10.0, 10.0);
+  std::vector<VType> values2;
   for (const auto& value : values1) {
     values2.push_back(value);
     values2.back().getPosition() += offset;
@@ -99,7 +95,7 @@ TEST(InvarianceUnderCoordinateTransformation, Translation) {
   curve2.fitCurve(times, values2);
 
   for (double time = times[0]; time <= times[1]; time += 0.1) {
-    ValueType value1, value2;
+    VType value1, value2;
     ASSERT_TRUE(curve1.evaluate(value1, time));
     ASSERT_TRUE(curve2.evaluate(value2, time));
     std::string msg = std::string{"knot at time: "} + std::to_string(time);
@@ -111,21 +107,21 @@ TEST(InvarianceUnderCoordinateTransformation, Translation) {
 
 TEST(InvarianceUnderCoordinateTransformation, Rotation) {
   CubicHermiteSE3Curve curve1;
-  std::vector<Time> times;
-  std::vector<ValueType> values1;
+  std::vector<curves::Time> times;
+  std::vector<VType> values1;
   times.push_back(0.0);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(kindr::EulerAnglesYprPD(0.0, 0.0, 0.0))));
+  values1.push_back(VType(VType::Position(), VType::Rotation(kindr::EulerAnglesYprPD(0.0, 0.0, 0.0))));
   times.push_back(2.0);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(kindr::EulerAnglesYprPD(20.0 / 180.0 * M_PI, 0.0, 0.0))));
+  values1.push_back(VType(VType::Position(), VType::Rotation(kindr::EulerAnglesYprPD(20.0 / 180.0 * M_PI, 0.0, 0.0))));
   times.push_back(4.0);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(kindr::EulerAnglesYprPD(-20.0 / 180.0 * M_PI, 0.0, 0.0))));
+  values1.push_back(VType(VType::Position(), VType::Rotation(kindr::EulerAnglesYprPD(-20.0 / 180.0 * M_PI, 0.0, 0.0))));
   times.push_back(5.2);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(kindr::EulerAnglesYprPD(0.0, 0.0, 0.0))));
+  values1.push_back(VType(VType::Position(), VType::Rotation(kindr::EulerAnglesYprPD(0.0, 0.0, 0.0))));
   curve1.fitCurve(times, values1);
 
   CubicHermiteSE3Curve curve2;
-  ValueType::Rotation transform(kindr::EulerAnglesYprPD(3.0, 0.0, 0.0));
-  std::vector<ValueType> values2;
+  VType::Rotation transform(kindr::EulerAnglesYprPD(3.0, 0.0, 0.0));
+  std::vector<VType> values2;
   for (const auto& value : values1) {
     values2.push_back(value);
     values2.back().getRotation() = transform * values2.back().getRotation();
@@ -134,10 +130,10 @@ TEST(InvarianceUnderCoordinateTransformation, Rotation) {
   curve2.fitCurve(times, values2);
 
   for (double time = times[0]; time <= times[3]; time += 0.1) {
-    ValueType value1, value2;
+    VType value1, value2;
     ASSERT_TRUE(curve1.evaluate(value1, time));
     ASSERT_TRUE(curve2.evaluate(value2, time));
-    const ValueType::Rotation rotation2 = transform.inverted() * value2.getRotation();
+    const VType::Rotation rotation2 = transform.inverted() * value2.getRotation();
 
     std::string msg = std::string{"knot at time: "} + std::to_string(time);
     KINDR_ASSERT_DOUBLE_MX_EQ(value1.getPosition().toImplementation(), value2.getPosition().toImplementation(), 1e-3, msg);
@@ -148,21 +144,21 @@ TEST(InvarianceUnderCoordinateTransformation, Rotation) {
 
 TEST(InvarianceUnderCoordinateTransformation, Rotation2) {
   CubicHermiteSE3Curve curve1;
-  std::vector<Time> times;
-  std::vector<ValueType> values1;
+  std::vector<curves::Time> times;
+  std::vector<VType> values1;
   times.push_back(0.0);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(0.0652549, 0.0, 0.0, 0.997869)));
+  values1.push_back(VType(VType::Position(), VType::Rotation(0.0652549, 0.0, 0.0, 0.997869)));
   times.push_back(2.0);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(0.109015, 0.0, 0.0, -0.99404)));  // w positive.
+  values1.push_back(VType(VType::Position(), VType::Rotation(0.109015, 0.0, 0.0, -0.99404)));  // w positive.
   times.push_back(4.0);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(0.237542, 0.0, 0.0, 0.971377)));
+  values1.push_back(VType(VType::Position(), VType::Rotation(0.237542, 0.0, 0.0, 0.971377)));
   times.push_back(5.2);
-  values1.push_back(ValueType(ValueType::Position(), ValueType::Rotation(0.0652549, 0.0, 0.0, 0.997869)));
+  values1.push_back(VType(VType::Position(), VType::Rotation(0.0652549, 0.0, 0.0, 0.997869)));
   curve1.fitCurve(times, values1);
 
   CubicHermiteSE3Curve curve2;
-  ValueType::Rotation transform = values1.front().getRotation();
-  std::vector<ValueType> values2;
+  VType::Rotation transform = values1.front().getRotation();
+  std::vector<VType> values2;
   for (const auto& value : values1) {
     values2.push_back(value);
     values2.back().getRotation() = transform * values2.back().getRotation();
@@ -171,10 +167,10 @@ TEST(InvarianceUnderCoordinateTransformation, Rotation2) {
   curve2.fitCurve(times, values2);
 
   for (double time = times[0]; time <= times[3]; time += 0.1) {
-    ValueType value1, value2;
+    VType value1, value2;
     ASSERT_TRUE(curve1.evaluate(value1, time));
     ASSERT_TRUE(curve2.evaluate(value2, time));
-    const ValueType::Rotation rotation2 = transform.inverted() * value2.getRotation();
+    const VType::Rotation rotation2 = transform.inverted() * value2.getRotation();
 
     std::string msg = std::string{"knot at time: "} + std::to_string(time);
     KINDR_ASSERT_DOUBLE_MX_EQ(value1.getPosition().toImplementation(), value2.getPosition().toImplementation(), 1e-3, msg);
@@ -185,45 +181,45 @@ TEST(InvarianceUnderCoordinateTransformation, Rotation2) {
 
 TEST(CubicHermiteSE3CurveTest, firstDerivative) {
   CubicHermiteSE3Curve curve;
-  std::vector<Time> times;
-  std::vector<ValueType> values;
+  std::vector<curves::Time> times;
+  std::vector<VType> values;
 
   double time0 = -1.56;
   times.push_back(time0);
-  ValueType::Rotation rotation0(kindr::EulerAnglesZyxD(M_PI_2, 0.2, -0.9));
-  ValueType::Position position0(1.0, 2.0, 4.0);
-  ValueType transform0(position0, rotation0);
+  VType::Rotation rotation0(kindr::EulerAnglesZyxD(M_PI_2, 0.2, -0.9));
+  VType::Position position0(1.0, 2.0, 4.0);
+  VType transform0(position0, rotation0);
   values.push_back(transform0);
 
   double timeMid1 = 1.0;
   times.push_back(timeMid1);
-  ValueType::Rotation rotationMid1(kindr::EulerAnglesZyxD(2.0, 3.0, -1.1));
-  ValueType::Position positionMid1(2.0, 4.0, 8.0);
-  values.push_back(ValueType(positionMid1, rotationMid1));
+  VType::Rotation rotationMid1(kindr::EulerAnglesZyxD(2.0, 3.0, -1.1));
+  VType::Position positionMid1(2.0, 4.0, 8.0);
+  values.push_back(VType(positionMid1, rotationMid1));
 
   double timeMid2 = 2.5;
   times.push_back(timeMid2);
-  ValueType::Rotation rotationMid2(kindr::EulerAnglesZyxD(0.2, 0.5, 0.2));
-  ValueType::Position positionMid2(2.0, 4.0, 8.0);
-  values.push_back(ValueType(positionMid2, rotationMid2));
+  VType::Rotation rotationMid2(kindr::EulerAnglesZyxD(0.2, 0.5, 0.2));
+  VType::Position positionMid2(2.0, 4.0, 8.0);
+  values.push_back(VType(positionMid2, rotationMid2));
 
   double timeMid3 = 3.0;
   times.push_back(timeMid3);
-  ValueType::Rotation rotationMid3(kindr::EulerAnglesZyxD(1.5, 0.4, -0.3));
-  ValueType::Position positionMid3(2.0, 4.0, 8.0);
-  values.push_back(ValueType(positionMid3, rotationMid3));
+  VType::Rotation rotationMid3(kindr::EulerAnglesZyxD(1.5, 0.4, -0.3));
+  VType::Position positionMid3(2.0, 4.0, 8.0);
+  values.push_back(VType(positionMid3, rotationMid3));
 
   double time1 = 4.0;
   times.push_back(time1);
-  ValueType::Rotation rotation1(kindr::EulerAnglesZyxD(0.0, 0.0, 0.0));
-  ValueType::Position position1(4.0, 8.0, 16.0);
-  values.push_back(ValueType(position1, rotation1.getUnique()));
+  VType::Rotation rotation1(kindr::EulerAnglesZyxD(0.0, 0.0, 0.0));
+  VType::Position position1(4.0, 8.0, 16.0);
+  values.push_back(VType(position1, rotation1.getUnique()));
   curve.fitCurve(times, values);
 
   // Check first knot
-  ValueType transform;
+  VType transform;
   ASSERT_TRUE(curve.evaluate(transform, time0));
-  ValueType expTransform = transform0;
+  VType expTransform = transform0;
   EXPECT_NEAR(expTransform.getPosition().x(), transform.getPosition().x(), 1e-6);
   EXPECT_NEAR(expTransform.getPosition().y(), transform.getPosition().y(), 1e-6);
   EXPECT_NEAR(expTransform.getPosition().z(), transform.getPosition().z(), 1e-6);
@@ -245,7 +241,7 @@ TEST(CubicHermiteSE3CurveTest, firstDerivative) {
   for (double time = times[0] + h; time <= times.back(); time += 0.1) {
     double timeA = time - h;
     double timeB = time + h;
-    ValueType T_A, T_B;
+    VType T_A, T_B;
     ASSERT_TRUE(curve.evaluate(T_A, timeA));
     ASSERT_TRUE(curve.evaluate(T_B, timeB));
     Eigen::Vector3d angularVel = T_B.getRotation().boxMinus(T_A.getRotation()) / (2.0 * h);
@@ -258,39 +254,39 @@ TEST(CubicHermiteSE3CurveTest, firstDerivative) {
 
 TEST(CubicHermiteSE3CurveTest, linearAcceleration) {
   CubicHermiteSE3Curve curve;
-  std::vector<Time> times;
-  std::vector<ValueType> values;
+  std::vector<curves::Time> times;
+  std::vector<VType> values;
 
   double time0 = -1.56;
   times.push_back(time0);
-  ValueType::Rotation rotation0(kindr::EulerAnglesZyxD(M_PI_2, 0.2, -0.9));
-  ValueType::Position position0(1.0, 2.0, 4.0);
-  ValueType transform0(position0, rotation0);
+  VType::Rotation rotation0(kindr::EulerAnglesZyxD(M_PI_2, 0.2, -0.9));
+  VType::Position position0(1.0, 2.0, 4.0);
+  VType transform0(position0, rotation0);
   values.push_back(transform0);
 
   double timeMid1 = 1.0;
   times.push_back(timeMid1);
-  ValueType::Rotation rotationMid1(kindr::EulerAnglesZyxD(2.0, 3.0, -1.1));
-  ValueType::Position positionMid1(2.0, 4.0, 8.0);
-  values.push_back(ValueType(positionMid1, rotationMid1));
+  VType::Rotation rotationMid1(kindr::EulerAnglesZyxD(2.0, 3.0, -1.1));
+  VType::Position positionMid1(2.0, 4.0, 8.0);
+  values.push_back(VType(positionMid1, rotationMid1));
 
   double timeMid2 = 2.5;
   times.push_back(timeMid2);
-  ValueType::Rotation rotationMid2(kindr::EulerAnglesZyxD(0.2, 0.5, 0.2));
-  ValueType::Position positionMid2(2.0, 4.0, 8.0);
-  values.push_back(ValueType(positionMid2, rotationMid2));
+  VType::Rotation rotationMid2(kindr::EulerAnglesZyxD(0.2, 0.5, 0.2));
+  VType::Position positionMid2(2.0, 4.0, 8.0);
+  values.push_back(VType(positionMid2, rotationMid2));
 
   double timeMid3 = 3.0;
   times.push_back(timeMid3);
-  ValueType::Rotation rotationMid3(kindr::EulerAnglesZyxD(1.5, 0.4, -0.3));
-  ValueType::Position positionMid3(2.0, 4.0, 8.0);
-  values.push_back(ValueType(positionMid3, rotationMid3));
+  VType::Rotation rotationMid3(kindr::EulerAnglesZyxD(1.5, 0.4, -0.3));
+  VType::Position positionMid3(2.0, 4.0, 8.0);
+  values.push_back(VType(positionMid3, rotationMid3));
 
   double time1 = 4.0;
   times.push_back(time1);
-  ValueType::Rotation rotation1(kindr::EulerAnglesZyxD(0.0, 0.0, 0.0));
-  ValueType::Position position1(4.0, 8.0, 16.0);
-  values.push_back(ValueType(position1, rotation1.getUnique()));
+  VType::Rotation rotation1(kindr::EulerAnglesZyxD(0.0, 0.0, 0.0));
+  VType::Position position1(4.0, 8.0, 16.0);
+  values.push_back(VType(position1, rotation1.getUnique()));
 
   curve.fitCurve(times, values);
 
@@ -312,26 +308,26 @@ TEST(CubicHermiteSE3CurveTest, linearAcceleration) {
 
 TEST(Debugging, FreeGaitTorsoControl) {
   CubicHermiteSE3Curve curve;
-  std::vector<Time> times;
-  std::vector<ValueType> values;
-  ValueType::Rotation fixRotation(0.999999, -6.31036e-05, 0.00109732, -3.43683e-06);
+  std::vector<curves::Time> times;
+  std::vector<VType> values;
+  VType::Rotation fixRotation(0.999999, -6.31036e-05, 0.00109732, -3.43683e-06);
   //  fixRotation.setIdentity(); // With this it succeeds.
   times.push_back(0.0);
-  values.push_back(ValueType(ValueType::Position(99.9, 0.0, 0.38), fixRotation));
+  values.push_back(VType(VType::Position(99.9, 0.0, 0.38), fixRotation));
   times.push_back(1.5);
-  values.push_back(ValueType(ValueType::Position(100.0, 0.0, 0.40), fixRotation));
+  values.push_back(VType(VType::Position(100.0, 0.0, 0.40), fixRotation));
   curve.fitCurve(times, values);
 
   //  curve.print();
 
   for (double time = times[0]; time <= times[1]; time += 0.1) {
-    ValueType value;
+    VType value;
     ASSERT_TRUE(curve.evaluate(value, time));
-    const ValueType::Position position = value.getPosition();
-    const ValueType::Rotation rotation = value.getRotation();
+    const VType::Position position = value.getPosition();
+    const VType::Rotation rotation = value.getRotation();
 
-    //    std::cout << "Time: " << time << " s, Position: " << position << std::endl;
-    //    std::cout << "Time: " << time << " s, Rotation: " << rotation << std::endl;
+    //    std::cout << "curves::Time: " << time << " s, Position: " << position << std::endl;
+    //    std::cout << "curves::Time: " << time << " s, Rotation: " << rotation << std::endl;
 
     EXPECT_GE(position.x(), values[0].getPosition().x());
     //    EXPECT_GE(position.y(), values[0].getPosition().y()); // Numerical issues.
@@ -349,15 +345,15 @@ TEST(Debugging, FreeGaitTorsoControl) {
 
 TEST(GetTime, Simple) {
   CubicHermiteSE3Curve curve;
-  std::vector<Time> times;
-  std::vector<ValueType> values;
+  std::vector<curves::Time> times;
+  std::vector<VType> values;
 
   times.push_back(1.1);
-  values.push_back(ValueType());
+  values.push_back(VType());
   times.push_back(5.6);
-  values.push_back(ValueType());
+  values.push_back(VType());
   times.push_back(7.2);
-  values.push_back(ValueType());
+  values.push_back(VType());
   curve.fitCurve(times, values);
 
   EXPECT_EQ(times[0], curve.getMinTime());

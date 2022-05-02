@@ -57,11 +57,13 @@ class PolynomialSplineVectorSpaceCurve : public VectorSpaceCurve<N> {
     return true;
   }
 
-  virtual void extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/, std::vector<Key>* /*outKeys*/) {
+  virtual void extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/,
+                      std::vector<Key>* /*outKeys*/ = NULL) override {
     throw std::runtime_error("PolynomialSplineVectorSpaceCurve::extend is not yet implemented!");
   }
 
-  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL) {
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values,
+                        std::vector<Key>* /*outKeys*/ = NULL) override {
     minTime_ = times.front();
     for (size_t i = 0; i < N; ++i) {
       std::vector<double> scalarValues;
@@ -85,7 +87,7 @@ class PolynomialSplineVectorSpaceCurve : public VectorSpaceCurve<N> {
 
   virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values,
                         const std::vector<DerivativeType>& firstDerivatives, const std::vector<DerivativeType>& secondDerivatives,
-                        std::vector<Key>* outKeys = NULL) {
+                        std::vector<Key>* /*outKeys*/ = NULL) {
     minTime_ = times.front();
     for (size_t i = 0; i < N; ++i) {
       std::vector<double> scalarValues, scalarFirstDerivates, scalarSecondDerivates;
@@ -97,14 +99,13 @@ class PolynomialSplineVectorSpaceCurve : public VectorSpaceCurve<N> {
         scalarFirstDerivates.push_back(firstDerivatives.at(t)(i));
         scalarSecondDerivates.push_back(secondDerivatives.at(t)(i));
       }
-      // TODO Copy all derivates, right now only first and last are supported.
+      // TODO Copy all derivatives, right now only first and last are supported.
       containers_.at(i).setData(times, scalarValues, *(scalarFirstDerivates.begin()), *(scalarSecondDerivates.begin()),
                                 *(scalarFirstDerivates.end() - 1), *(scalarSecondDerivates.end() - 1));
     }
   }
 
-  virtual void fitCurve(const std::vector<SplineOptions>& /*values*/, std::vector<Key>* /*outKeys*/) {
-    // TODO
+  virtual void fitCurve(const std::vector<SplineOptions>& /*values*/, std::vector<Key>* /*outKeys*/ = NULL) {
     throw std::runtime_error("PolynomialSplineVectorSpaceCurve::fitCurve is not yet implemented!");
   }
 

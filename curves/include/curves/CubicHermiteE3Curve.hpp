@@ -14,14 +14,18 @@
 #include "curves/SE3Curve.hpp"
 
 struct HermiteE3Knot {
-  typedef Eigen::Vector3d Position;
-  typedef Eigen::Vector3d Velocity;
-  typedef Eigen::Vector3d Acceleration;
+  using Position = Eigen::Vector3d;
+  using Velocity = Eigen::Vector3d;
+  using Acceleration = Eigen::Vector3d;
 
  public:
+  HermiteE3Knot(Position position, Velocity velocity) : position_(std::move(position)), velocity_(std::move(velocity)) {}
   HermiteE3Knot() : HermiteE3Knot(Position::Zero(), Velocity::Zero()) {}
-  HermiteE3Knot(const Position& position, const Velocity& velocity) : position_(position), velocity_(velocity) {}
-  virtual ~HermiteE3Knot() {}
+  HermiteE3Knot(const HermiteE3Knot&) = default;
+  HermiteE3Knot& operator=(const HermiteE3Knot&) = default;
+  HermiteE3Knot(HermiteE3Knot&&) = default;
+  HermiteE3Knot& operator=(HermiteE3Knot&&) = default;
+  virtual ~HermiteE3Knot() = default;
 
   Position getPosition() const { return position_; }
 
@@ -53,18 +57,17 @@ namespace curves {
 
 class CubicHermiteE3Curve {
  public:
-  typedef HermiteE3Knot Coefficient;
-  typedef LocalSupport2CoefficientManager<Coefficient>::CoefficientIter CoefficientIter;
-  typedef HermiteE3Knot::Position ValueType;
-  typedef HermiteE3Knot::Velocity DerivativeType;
-  typedef HermiteE3Knot::Acceleration Acceleration;
+  using Coefficient = HermiteE3Knot;
+  using CoefficientIter = LocalSupport2CoefficientManager<Coefficient>::CoefficientIter;
+  using ValueType = HermiteE3Knot::Position;
+  using DerivativeType = HermiteE3Knot::Velocity;
+  using Acceleration = HermiteE3Knot::Acceleration;
 
  public:
-  CubicHermiteE3Curve();
-  virtual ~CubicHermiteE3Curve();
+  virtual ~CubicHermiteE3Curve() = default;
 
   /// Print the value of the coefficient, for debugging and unit tests
-  virtual void print(const std::string& str = "") const;
+  virtual void print(const std::string& str) const;
 
   virtual bool writeEvalToFile(const std::string& filename, int nSamples) const;
 
@@ -85,20 +88,19 @@ class CubicHermiteE3Curve {
   /// Extend the curve so that it can be evaluated at these times.
   /// Try to make the curve fit to the values.
   /// Note: Assumes that extend times strictly increase the curve time
-  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
+  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
 
   /// \brief Fit a new curve to these data points.
   ///
   /// The existing curve will be cleared.fitCurveWithDerivatives
   /// Underneath the curve should have some default policy for fitting.
-  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
 
   virtual void fitCurveWithDerivatives(const std::vector<Time>& times, const std::vector<ValueType>& values,
-                                       const DerivativeType& initialDerivative = DerivativeType::Zero(),
-                                       const DerivativeType& finalDerivative = DerivativeType::Zero(), std::vector<Key>* outKeys = NULL);
+                                       const DerivativeType& initialDerivative, const DerivativeType& finalDerivative,
+                                       std::vector<Key>* outKeys = nullptr);
 
-  virtual void fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL);
-
+  virtual void fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
   /// Evaluate the ambient space of the curve.
   virtual bool evaluate(ValueType& value, Time time) const;
 

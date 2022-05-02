@@ -23,12 +23,9 @@ namespace curves {
 //
 class SE3Curve : public Curve<SE3Config> {
  public:
-  SE3Curve();
-  virtual ~SE3Curve();
-
-  typedef Curve<SE3Config> Parent;
-  typedef Parent::ValueType ValueType;
-  typedef Parent::DerivativeType DerivativeType;
+  using Parent = Curve<SE3Config>;
+  using ValueType = Parent::ValueType;
+  using DerivativeType = Parent::DerivativeType;
 
   /// \brief Evaluate the angular velocity of Frame b as seen from Frame a, expressed in Frame a.
   virtual Eigen::Vector3d evaluateAngularVelocityA(Time time) = 0;
@@ -81,12 +78,7 @@ class SE3Curve : public Curve<SE3Config> {
 
   /// \brief Set the sampling ratio.
   ///   eg. 4 will add a coefficient every 4 extend
-  virtual void setSamplingRatio(const int ratio) = 0;
-
-  virtual void clear() = 0;
-
-  /// \brief Perform a rigid transformation on the left side of the curve
-  virtual void transformCurve(const ValueType T) = 0;
+  virtual void setSamplingRatio(int ratio) = 0;
 
   virtual void saveCurveTimesAndValues(const std::string& filename) const = 0;
 

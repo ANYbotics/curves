@@ -9,9 +9,6 @@
 
 namespace curves {
 
-CubicHermiteE3Curve::CubicHermiteE3Curve() {}
-CubicHermiteE3Curve::~CubicHermiteE3Curve() {}
-
 /// Print the value of the coefficient, for debugging and unit tests
 void CubicHermiteE3Curve::print(const std::string& str) const {
   std::cout << "=========================================" << std::endl;
@@ -94,13 +91,13 @@ int CubicHermiteE3Curve::size() const {
 }
 
 /// \brief calculate the slope between 2 coefficients
-CubicHermiteE3Curve::DerivativeType CubicHermiteE3Curve::calculateSlope(const Time& timeA, const Time& timeB, const ValueType& positionA,
-                                                                        const ValueType& positionB) const {
+CubicHermiteE3Curve::DerivativeType CubicHermiteE3Curve::calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA,
+                                                                        const ValueType& coeffB) const {
   const double inverse_dt_sec = 1.0 / double(timeB - timeA);
   // Original curves implementation was buggy for 180 deg flips.
 
   // Calculate the global angular velocity:
-  const DerivativeType velocity_m_s = (positionB - positionA) * inverse_dt_sec;
+  const DerivativeType velocity_m_s = (coeffB - coeffA) * inverse_dt_sec;
   // note: unit of derivative is m/s for first 3 and rad/s for last 3 entries
   return velocity_m_s;
 }

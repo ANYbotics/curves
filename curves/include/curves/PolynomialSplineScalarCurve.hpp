@@ -83,22 +83,24 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     return true;
   }
 
-  virtual void extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/, std::vector<Key>* /*outKeys*/) {
+  virtual void extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/,
+                      std::vector<Key>* /*outKeys*/ = NULL) override {
     throw std::runtime_error("extend is not yet implemented!");
   }
 
-  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = NULL) {
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values,
+                        std::vector<Key>* /*outKeys*/ = NULL) override {
     container_.setData(times, values, 0.0, 0.0, 0.0, 0.0);
     minTime_ = times.front();
   }
 
   virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, double initialVelocity,
-                        double initialAcceleration, double finalVelocity, double finalAcceleration, std::vector<Key>* outKeys = NULL) {
+                        double initialAcceleration, double finalVelocity, double finalAcceleration, std::vector<Key>* /*outKeys*/ = NULL) {
     container_.setData(times, values, initialVelocity, initialAcceleration, finalVelocity, finalAcceleration);
     minTime_ = times.front();
   }
 
-  virtual void fitCurve(const std::vector<SplineOptions>& optionList, std::vector<Key>* outKeys = NULL) {
+  virtual void fitCurve(const std::vector<SplineOptions>& optionList, std::vector<Key>* /*outKeys*/ = NULL) {
     container_.reserveSplines(optionList.size());
     for (const auto& options : optionList) {
       container_.addSpline(PolynomialSplineQuintic(options));
