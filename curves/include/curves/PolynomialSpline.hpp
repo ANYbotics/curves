@@ -49,9 +49,13 @@ class PolynomialSpline {
   PolynomialSpline(SplineCoeff_&& coefficients, double duration)
       : duration_(duration), didEvaluateCoeffs_(true), coefficients_(std::forward<SplineCoeff_>(coefficients)) {}
 
-  explicit PolynomialSpline(const SplineOptions& options) : duration_(options.tf_) { computeCoefficients(options); }
+  explicit PolynomialSpline(const SplineOptions& options) : duration_(options.tf_), didEvaluateCoeffs_(true) {
+    computeCoefficients(options);
+  }
 
-  explicit PolynomialSpline(SplineOptions&& options) : duration_(options.tf_) { computeCoefficients(std::move(options)); }
+  explicit PolynomialSpline(SplineOptions&& options) : duration_(options.tf_), didEvaluateCoeffs_(true) {
+    computeCoefficients(std::move(options));
+  }
 
   virtual ~PolynomialSpline() = default;
 
@@ -226,16 +230,16 @@ class PolynomialSpline {
 
  protected:
   //! The duration of the spline in seconds.
-  double duration_;
+  double duration_{0.};
 
   //! True if the coefficents were computed at least once.
-  bool didEvaluateCoeffs_;
+  bool didEvaluateCoeffs_{false};
 
   /*
    * s(t) = an*t^n + ... + a1*t + a0
    * splineCoeff_ = [an ... a1 a0]
    */
-  SplineCoefficients coefficients_;
+  SplineCoefficients coefficients_{};
 };
 
 }  // namespace curves
