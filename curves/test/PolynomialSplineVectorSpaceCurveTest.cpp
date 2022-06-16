@@ -10,7 +10,7 @@
 
 #include "curves/PolynomialSplineVectorSpaceCurve.hpp"
 
-using namespace curves;
+using curves::PolynomialSplineQuinticVector3Curve;
 
 typedef typename curves::PolynomialSplineQuinticVector3Curve::ValueType ValueType;
 
@@ -20,15 +20,15 @@ TEST(PolynomialSplineQuinticVector3Curve, Debugging) {
   std::vector<ValueType> values;
 
   times.push_back(0.0);
-  values.push_back(ValueType(0.352492, -0.208961, 0.015573));
+  values.emplace_back(0.352492, -0.208961, 0.015573);
   times.push_back(0.5);
-  values.push_back(ValueType(0.352492, -0.208961, 0.115573));
+  values.emplace_back(0.352492, -0.208961, 0.115573);
   times.push_back(1.0);
-  values.push_back(ValueType(0.419831, -0.2154, 0.115573));
+  values.emplace_back(0.419831, -0.2154, 0.115573);
   times.push_back(1.5);
-  values.push_back(ValueType(0.419831, -0.2154, -0.000102906));
+  values.emplace_back(0.419831, -0.2154, -0.000102906);
 
-  curve.fitCurve(times, values);
+  curve.fitCurve(times, values, nullptr);
 
   //  for (double t = times[0]; t <= times[3]; t += 0.0025) {
   //    std::cout << t << " " << curve.evaluate(t).x() << " " <<

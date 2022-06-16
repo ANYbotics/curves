@@ -10,15 +10,16 @@
 
 #include "curves/PolynomialSplineScalarCurve.hpp"
 
-using namespace curves;
+using curves::PolynomialSplineQuinticScalarCurve;
+using curves::Time;
 
 typedef typename curves::PolynomialSplineQuinticScalarCurve::ValueType ValueType;
 
 ValueType finiteDifference(curves::PolynomialSplineQuinticScalarCurve& curve, curves::Time time) {
   curves::Time dt = 1.0e-6;
-  ValueType f_P;
+  ValueType f_P = 0.;
   curve.evaluate(f_P, time + dt);
-  ValueType f_M;
+  ValueType f_M = 0.;
   curve.evaluate(f_M, time - dt);
   return (f_P - f_M) / (2.0 * dt);
 }
@@ -33,7 +34,7 @@ TEST(PolynomialSplineQuinticScalarCurveTest, minMax) {
   times.push_back(4.0);
   values.push_back(ValueType(5.0));
 
-  curve.fitCurve(times, values);
+  curve.fitCurve(times, values, nullptr);
 
   ValueType value;
 
@@ -66,14 +67,14 @@ TEST(PolynomialSplineQuinticScalarCurveTest, initialAndFinalConstraints) {
   values.push_back(ValueType(finalValue));
 
   curve.fitCurve(times, values, initialFirstDerivativeValue, initialSecondDerivativeValue, finalFirstDerivativeValue,
-                 finalSecondDerivativeValue);
+                 finalSecondDerivativeValue, nullptr);
 
-  ValueType value;
+  ValueType value = 0.;
   ASSERT_TRUE(curve.evaluate(value, initialTime));
   EXPECT_NEAR(initialValue, value, 1.0e-3) << "initialValue";
   ASSERT_TRUE(curve.evaluate(value, finalTime));
   EXPECT_NEAR(finalValue, value, 1.0e-3) << "finalValue";
-  curves::PolynomialSplineQuinticScalarCurve::DerivativeType derivative;
+  curves::PolynomialSplineQuinticScalarCurve::DerivativeType derivative = 0.;
   curve.evaluateDerivative(derivative, initialTime, 1);
   EXPECT_NEAR(initialFirstDerivativeValue, derivative, 1.0e-3) << "initialFirstDerivativeValue";
   curve.evaluateDerivative(derivative, finalTime, 1);
@@ -112,12 +113,12 @@ TEST(PolynomialSplineQuinticScalarCurveTest, firstDerivative) {
   values.push_back(ValueType(finalValue));
 
   curve.fitCurve(times, values, initialFirstDerivativeValue, initialSecondDerivativeValue, finalFirstDerivativeValue,
-                 finalSecondDerivativeValue);
+                 finalSecondDerivativeValue, nullptr);
 
-  ValueType value;
+  ValueType value = 0.;
   ASSERT_TRUE(curve.evaluate(value, midTime));
   EXPECT_NEAR(midValue, value, 1.0e-3);
-  curves::PolynomialSplineQuinticScalarCurve::DerivativeType derivative;
+  curves::PolynomialSplineQuinticScalarCurve::DerivativeType derivative = 0.;
   curve.evaluateDerivative(derivative, midTime, 1);
   EXPECT_NEAR(finiteDifference(curve, midTime), derivative, 1.0e-3) << "maximum diff";
   curve.evaluateDerivative(derivative, midTime, 1);
@@ -137,21 +138,25 @@ TEST(PolynomialSplineQuinticScalarCurveTest, invarianceUnderOffset) {
   values1.push_back(ValueType(0.1));
   times.push_back(0.58075);
   values1.push_back(ValueType(0.0));
-  curve1.fitCurve(times, values1);
+  curve1.fitCurve(times, values1, nullptr);
 
   // Second curve (offset).
   PolynomialSplineQuinticScalarCurve curve2;
   std::vector<ValueType> values2;
   ValueType offset = -0.05;
-  for (const auto& value : values1) values2.push_back(value + offset);
-  curve2.fitCurve(times, values2);
+  for (const auto& value : values1) {
+    values2.push_back(value + offset);
+  }
+  curve2.fitCurve(times, values2, nullptr);
 
   // Check.
-  for (double time = times[0]; time <= times[3]; time += 0.01) {
-    ValueType value1;
-    curve1.evaluate(value1, time);
-    ValueType value2;
-    curve2.evaluate(value2, time);
+  double testTime = times[0];
+  while (testTime <= times[3]) {
+    ValueType value1 = 0.;
+    curve1.evaluate(value1, testTime);
+    ValueType value2 = 0.;
+    curve2.evaluate(value2, testTime);
     EXPECT_NEAR(value1, value2 - offset, 1.0e-7);
+    testTime += 0.01;
   }
 }

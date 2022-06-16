@@ -19,11 +19,6 @@
 namespace curves {
 
 template <class C1, class C2>
-SE3CompositionCurve<C1, C2>::SE3CompositionCurve() {}
-
-template <class C1, class C2>
-SE3CompositionCurve<C1, C2>::~SE3CompositionCurve() {}
-template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::print(const std::string& str) const {
   std::cout << "=========================================" << std::endl;
   std::cout << "===== CompositionCurve SE3 CURVE ========" << std::endl;
@@ -40,8 +35,8 @@ void SE3CompositionCurve<C1, C2>::saveCurves(const std::string& filename) const 
   Eigen::VectorXd v(7);
 
   std::vector<Eigen::VectorXd> baseCurveValues;
-  for (size_t i = 0; i < baseCurveTimes.size(); ++i) {
-    ValueType val = baseCurve_.evaluate(baseCurveTimes[i]);
+  for (const auto& time : baseCurveTimes) {
+    ValueType val = baseCurve_.evaluate(time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     baseCurveValues.push_back(v);
@@ -50,16 +45,16 @@ void SE3CompositionCurve<C1, C2>::saveCurves(const std::string& filename) const 
   std::vector<Time> correctionCurveTimes;
   correctionCurve_.manager_.getTimes(&correctionCurveTimes);
   std::vector<Eigen::VectorXd> correctionCurveValues;
-  for (size_t i = 0; i < correctionCurveTimes.size(); ++i) {
-    ValueType val = correctionCurve_.evaluate(correctionCurveTimes[i]);
+  for (const auto& time : baseCurveTimes) {
+    ValueType val = correctionCurve_.evaluate(time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     correctionCurveValues.push_back(v);
   }
 
   std::vector<Eigen::VectorXd> combinedCurveValues;
-  for (size_t i = 0; i < baseCurveTimes.size(); ++i) {
-    ValueType val = this->evaluate(baseCurveTimes[i]);
+  for (const auto& time : baseCurveTimes) {
+    ValueType val = this->evaluate(time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     combinedCurveValues.push_back(v);
@@ -122,22 +117,20 @@ void SE3CompositionCurve<C1, C2>::extend(const std::vector<Time>& times,
   CHECK_EQ(values.size(), 1) << "Extend was called with more than one value.";
 
   // Find the new limit times of the curve
-  Time newMaxTime, newMinTime;
+  Time newMaxTime = 0;
+  Time newMinTime = 0;
 
-  if (baseCurve_.isEmpty()) {
-    newMaxTime = 0;
-    newMinTime = 0;
-  } else {
+  if (!baseCurve_.isEmpty()) {
     newMaxTime = baseCurve_.getMaxTime();
     newMinTime = baseCurve_.getMinTime();
   }
 
-  for (std::vector<Time>::const_iterator it = times.begin(); it != times.end(); ++it) {
-    if (newMaxTime < *it) {
-      newMaxTime = *it;
+  for (auto time : times) {
+    if (newMaxTime < time) {
+      newMaxTime = time;
     }
-    if (newMinTime > *it) {
-      newMinTime = *it;
+    if (newMinTime > time) {
+      newMinTime = time;
     }
   }
 
@@ -147,7 +140,7 @@ void SE3CompositionCurve<C1, C2>::extend(const std::vector<Time>& times,
 
   if (correctionCurve_.isEmpty()) {
     correctionTimes.push_back(newMinTime);
-    correctionValues.push_back(ValueType(ValueType::Position(0, 0, 0), ValueType::Rotation(1, 0, 0, 0)));
+    correctionValues.emplace_back(ValueType::Position(0, 0, 0), ValueType::Rotation(1, 0, 0, 0));
     correctionCurve_.extend(correctionTimes, correctionValues);
   }
 
@@ -165,9 +158,9 @@ void SE3CompositionCurve<C1, C2>::extend(const std::vector<Time>& times,
 
   // Compute the base curve updates accounting for the corrections
   std::vector<ValueType> newValues;
-  std::vector<ValueType>::const_iterator itValues = values.begin();
-  for (std::vector<Time>::const_iterator it = times.begin(); it != times.end(); ++it) {
-    newValues.push_back(correctionCurve_.evaluate(*it).inverted() * (*itValues));
+  auto itValues = values.begin();
+  for (auto time : times) {
+    newValues.push_back(correctionCurve_.evaluate(time).inverted() * (*itValues));
     ++itValues;
   }
   baseCurve_.extend(times, newValues, outKeys);
@@ -175,20 +168,19 @@ void SE3CompositionCurve<C1, C2>::extend(const std::vector<Time>& times,
 
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::foldInCorrections() {
-  std::cout << "foldincorrections" << std::endl;
   std::vector<Time> times;
   std::vector<ValueType> newValues;
   baseCurve_.manager_.getTimes(&times);
-  for (std::vector<Time>::const_iterator it = times.begin(); it != times.end(); ++it) {
-    newValues.push_back(this->evaluate(*it));
+  for (auto time : times) {
+    newValues.push_back(this->evaluate(time));
   }
   baseCurve_.clear();
   baseCurve_.extend(times, newValues);
   times.clear();
   newValues.clear();
   correctionCurve_.manager_.getTimes(&times);
-  for (std::vector<Time>::const_iterator it = times.begin(); it != times.end(); ++it) {
-    newValues.push_back(ValueType(ValueType::Position(0, 0, 0), ValueType::Rotation(1, 0, 0, 0)));
+  for (auto time : times) {
+    newValues.emplace_back(ValueType::Position(0, 0, 0), ValueType::Rotation(1, 0, 0, 0));
   }
   correctionCurve_.clear();
   correctionCurve_.extend(times, newValues);
@@ -205,8 +197,8 @@ template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::setCorrectionTimes(const std::vector<Time>& times) {
   // Evaluate the correction curve at these times
   std::vector<ValueType> values;
-  for (size_t i = 0; i < times.size(); ++i) {
-    values.push_back(correctionCurve_.evaluate(times[i]));
+  for (auto time : times) {
+    values.push_back(correctionCurve_.evaluate(time));
   }
 
   // Redefine the correction curve
@@ -270,90 +262,6 @@ typename SE3CompositionCurve<C1, C2>::ValueType SE3CompositionCurve<C1, C2>::eva
 }
 
 template <class C1, class C2>
-typename SE3CompositionCurve<C1, C2>::DerivativeType SE3CompositionCurve<C1, C2>::evaluateDerivative(Time time,
-                                                                                                     unsigned derivativeOrder) const {
-  // todo
-  return typename SE3CompositionCurve<C1, C2>::DerivativeType();
-}
-
-template <class C1, class C2>
-void SE3CompositionCurve<C1, C2>::setTimeRange(Time minTime, Time maxTime) {
-  // todo
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateAngularVelocityA(Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateAngularVelocityB(Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateLinearVelocityA(Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateLinearVelocityB(Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Vector6d SE3CompositionCurve<C1, C2>::evaluateTwistA(Time time) {
-  // todo
-  return Vector6d::Zero();
-}
-
-template <class C1, class C2>
-Vector6d SE3CompositionCurve<C1, C2>::evaluateTwistB(Time time) {
-  // todo
-  return Vector6d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateAngularDerivativeA(unsigned derivativeOrder, Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateAngularDerivativeB(unsigned derivativeOrder, Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateLinearDerivativeA(unsigned derivativeOrder, Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Eigen::Vector3d SE3CompositionCurve<C1, C2>::evaluateLinearDerivativeB(unsigned derivativeOrder, Time time) {
-  // todo
-  return Eigen::Vector3d::Zero();
-}
-
-template <class C1, class C2>
-Vector6d SE3CompositionCurve<C1, C2>::evaluateDerivativeA(unsigned derivativeOrder, Time time) {
-  // todo
-  return Vector6d::Zero();
-}
-
-template <class C1, class C2>
-Vector6d SE3CompositionCurve<C1, C2>::evaluateDerivativeB(unsigned derivativeOrder, Time time) {
-  // todo
-  return Vector6d::Zero();
-}
-
-template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::clear() {
   baseCurve_.clear();
   correctionCurve_.clear();
@@ -381,11 +289,11 @@ template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::resetCorrectionCurve(const std::vector<Time>& times) {
   std::vector<ValueType> values;
   for (size_t i = 0; i < times.size(); ++i) {
-    values.push_back(ValueType(ValueType::Position(0, 0, 0), ValueType::Rotation(1, 0, 0, 0)));
+    values.emplace_back(ValueType::Position(0, 0, 0), ValueType::Rotation(1, 0, 0, 0));
   }
 
   // Redefine the correction curve
-  correctionCurve_.fitCurve(times, values);
+  correctionCurve_.fitCurve(times, values, nullptr);
 
   CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
   CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
@@ -393,7 +301,7 @@ void SE3CompositionCurve<C1, C2>::resetCorrectionCurve(const std::vector<Time>& 
 
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::setBaseCurve(const std::vector<Time>& times, const std::vector<ValueType>& values) {
-  baseCurve_.fitCurve(times, values);
+  baseCurve_.fitCurve(times, values, nullptr);
   CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
   CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
 }
@@ -427,8 +335,8 @@ void SE3CompositionCurve<C1, C2>::saveCurveAtTimes(const std::string& filename, 
 
   std::vector<Eigen::VectorXd> curveValues;
   ValueType val;
-  for (size_t i = 0; i < times.size(); ++i) {
-    val = evaluate(times[i]);
+  for (auto time : times) {
+    val = evaluate(time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     curveValues.push_back(v);
@@ -451,8 +359,8 @@ void SE3CompositionCurve<C1, C2>::saveCorrectionCurveAtTimes(const std::string& 
 
   std::vector<Eigen::VectorXd> curveValues;
   ValueType val;
-  for (size_t i = 0; i < times.size(); ++i) {
-    val = correctionCurve_.evaluate(times[i]);
+  for (auto time : times) {
+    val = correctionCurve_.evaluate(time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     curveValues.push_back(v);

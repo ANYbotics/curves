@@ -26,9 +26,6 @@ struct SplineOptions {
   constexpr SplineOptions(double tf, double pos0, double posT, double vel0, double velT, double acc0, double accT)
       : tf_(tf), pos0_(pos0), posT_(posT), vel0_(vel0), velT_(velT), acc0_(acc0), accT_(accT) {}
 
-  SplineOptions(SplineOptions&&) = default;
-  SplineOptions& operator=(SplineOptions&&) = default;
-
   //! The total duration of the spline in seconds.
   double tf_;
 

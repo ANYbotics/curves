@@ -27,10 +27,12 @@ class Curve {
 
   Curve() = default;
   Curve(const Curve&) = default;
-  Curve& operator=(const Curve&) = default;
   Curve(Curve&&) = default;
-  Curve& operator=(Curve&&) = default;
+
   virtual ~Curve() = default;
+
+  Curve& operator=(const Curve&) = default;
+  Curve& operator=(Curve&&) = default;
 
   ///\defgroup Info
   ///\name Methods to get information about the curve.

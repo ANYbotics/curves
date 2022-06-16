@@ -13,7 +13,7 @@
 
 namespace curves {
 
-typedef Eigen::Matrix<double, 6, 1> Vector6d;
+using Vector6d = Eigen::Matrix<double, 6, 1>;
 
 struct SE3Config {
   using ValueType = kindr::HomTransformQuatD;

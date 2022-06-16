@@ -61,7 +61,7 @@ void LocalSupport2CoefficientManager<Coefficient>::appendKeys(std::vector<Key>* 
   CoefficientIter it;
   it = timeToCoefficient_.begin();
   for (; it != timeToCoefficient_.end(); ++it) {
-    outKeys->push_back(it->second.key);
+    outKeys->push_back(it->second.key_);
   }
 }
 
@@ -106,8 +106,8 @@ Key LocalSupport2CoefficientManager<Coefficient>::insertCoefficient(Time time, c
   Key key{};
 
   if (this->hasCoefficientAtTime(time, &it)) {
-    this->updateCoefficientByKey(it->second.key, coefficient);
-    key = it->second.key;
+    this->updateCoefficientByKey(it->second.key_, coefficient);
+    key = it->second.key_;
   } else {
     key = KeyGenerator::getNextKey();
     std::pair<Time, KeyCoefficient> iterator(time, KeyCoefficient(key, coefficient));
@@ -144,7 +144,7 @@ void LocalSupport2CoefficientManager<Coefficient>::modifyCoefficientsValuesInBat
 
   for (size_t i = 0; i < times.size(); ++i) {
     CHECK_EQ(it->first, times[i]);
-    it->second.coefficient = values[i];
+    it->second.coefficient_ = values[i];
     ++it;
   }
 }
@@ -170,9 +170,9 @@ void LocalSupport2CoefficientManager<Coefficient>::modifyCoefficient(typename Ti
                                                                      const Coefficient& coefficient) {
   // This is used by slerp sampling policy.
   // In this case a new coefficient should be placed slightly later than the initial one.
-  auto newIt = timeToCoefficient_.insert(it, std::make_pair(time, KeyCoefficient(it->second.key, coefficient)));
+  auto newIt = timeToCoefficient_.insert(it, std::make_pair(time, KeyCoefficient(it->second.key_, coefficient)));
   // Update keyToCoefficient_
-  keyToCoefficient_[it->second.key] = newIt;
+  keyToCoefficient_[it->second.key_] = newIt;
   // Remove the old coefficient
   timeToCoefficient_.erase(it);
 }
@@ -192,7 +192,7 @@ template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::removeCoefficientAtTime(Time time) {
   CHECK(this->hasCoefficientAtTime(time)) << "No coefficient at that time.";
   auto it1 = timeToCoefficient_.find(time);
-  auto it2 = keyToCoefficient_.find(it1->second.key);
+  auto it2 = keyToCoefficient_.find(it1->second.key_);
   timeToCoefficient_.erase(it1);
   keyToCoefficient_.erase(it2);
 }
@@ -200,14 +200,14 @@ void LocalSupport2CoefficientManager<Coefficient>::removeCoefficientAtTime(Time 
 /// \brief return true if there is a coefficient at this time
 template <class Coefficient>
 bool LocalSupport2CoefficientManager<Coefficient>::hasCoefficientAtTime(Time time) const {
-  CoefficientIter it = timeToCoefficient_.find(time);
+  auto it = timeToCoefficient_.find(time);
   return it != timeToCoefficient_.end();
 }
 
 /// \brief return true if there is a coefficient with this key
 template <class Coefficient>
 bool LocalSupport2CoefficientManager<Coefficient>::hasCoefficientWithKey(Key key) const {
-  CoefficientIter it = keyToCoefficient_.find(key);
+  auto it = keyToCoefficient_.find(key);
   return it != keyToCoefficient_.end();
 }
 
@@ -219,7 +219,7 @@ template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::updateCoefficientByKey(Key key, const Coefficient& coefficient) {
   auto it = keyToCoefficient_.find(key);
   CHECK(it != keyToCoefficient_.end()) << "Key " << key << " is not in the container.";
-  it->second->second.coefficient = coefficient;
+  it->second->second.coefficient_ = coefficient;
 }
 
 /// \brief get the coefficient associated with this key
@@ -227,7 +227,7 @@ template <class Coefficient>
 Coefficient LocalSupport2CoefficientManager<Coefficient>::getCoefficientByKey(Key key) const {
   auto it = keyToCoefficient_.find(key);
   CHECK(it != keyToCoefficient_.end()) << "Key " << key << " is not in the container.";
-  return it->second->second.coefficient;
+  return it->second->second.coefficient_;
 }
 template <class Coefficient>
 Time LocalSupport2CoefficientManager<Coefficient>::getCoefficientTimeByKey(Key key) const {
@@ -286,10 +286,10 @@ void LocalSupport2CoefficientManager<Coefficient>::getCoefficientsInRange(Time s
     it--;
     // iterate through coefficients
     for (; it != timeToCoefficient_.end() && it->first < endTime; ++it) {
-      (*outCoefficients)[it->second->key] = it->second->coefficient;
+      (*outCoefficients)[it->second->key_] = it->second->coefficient_;
     }
     if (it != timeToCoefficient_.end()) {
-      (*outCoefficients)[it->second->key] = it->second->coefficient;
+      (*outCoefficients)[it->second->key_] = it->second->coefficient_;
     }
   }
 }
@@ -301,7 +301,7 @@ void LocalSupport2CoefficientManager<Coefficient>::getCoefficients(CoefficientMa
   CoefficientIter it;
   it = timeToCoefficient_.begin();
   for (; it != timeToCoefficient_.end(); ++it) {
-    (*outCoefficients)[it->second->key] = it->second->coefficient;
+    (*outCoefficients)[it->second->key_] = it->second->coefficient_;
   }
 }
 
@@ -355,9 +355,9 @@ template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::checkInternalConsistency(bool doExit) const {
   CHECK_EQ(keyToCoefficient_.size(), timeToCoefficient_.size());
   for (auto it = timeToCoefficient_.begin(); it != timeToCoefficient_.end(); ++it) {
-    Key key = it->second.key;
+    Key key = it->second.key_;
     auto itc = keyToCoefficient_.find(key);
-    CHECK_EQ(itc->first, itc->second->second.key);
+    CHECK_EQ(itc->first, itc->second->second.key_);
     CHECK(itc != keyToCoefficient_.end()) << "Key " << key << " is not in the map";
     // This is probably the important one.
     // Check that the itc->second iterator
@@ -367,7 +367,7 @@ void LocalSupport2CoefficientManager<Coefficient>::checkInternalConsistency(bool
     // pointers never get reallocated.
     // todo the implementation differs from the comment above. Here only the
     // equality between coefficients is checked
-    CHECK_EQ(itc->second->second.coefficient, it->second.coefficient);
+    CHECK_EQ(itc->second->second.coefficient_, it->second.coefficient_);
   }
   if (doExit) {
     exit(0);

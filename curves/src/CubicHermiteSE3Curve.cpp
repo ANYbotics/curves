@@ -19,8 +19,6 @@ CubicHermiteSE3Curve::CubicHermiteSE3Curve() : SE3Curve() {
   hermitePolicy_.setMinimumMeasurements(4);
 }
 
-CubicHermiteSE3Curve::~CubicHermiteSE3Curve() {}
-
 void CubicHermiteSE3Curve::print(const std::string& str) const {
   std::cout << "=========================================" << std::endl;
   std::cout << "======= Cubic Hermite SE3 CURVE =========" << std::endl;
@@ -46,7 +44,7 @@ void CubicHermiteSE3Curve::print(const std::string& str) const {
 
 bool CubicHermiteSE3Curve::writeEvalToFile(const std::string& filename, int nSamples) const {
   FILE* fp = fopen(filename.c_str(), "w");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     std::cout << "Could not open file to write" << std::endl;
     return false;
   }
@@ -60,7 +58,8 @@ bool CubicHermiteSE3Curve::writeEvalToFile(const std::string& filename, int nSam
   Time dt = (getMaxTime() - getMinTime()) / (nSamples - 1);
   ValueType pose;
   DerivativeType twist;
-  for (Time t = getMinTime(); t < getMaxTime(); t += dt) {
+  Time t = getMinTime();
+  while (t < getMaxTime()) {
     if (!evaluate(pose, t)) {
       std::cout << "Could not evaluate at time " << t << std::endl;
       fclose(fp);
@@ -78,6 +77,8 @@ bool CubicHermiteSE3Curve::writeEvalToFile(const std::string& filename, int nSam
             twist.getTranslationalVelocity().z());
     fprintf(fp, "%lf %lf %lf ", twist.getRotationalVelocity().x(), twist.getRotationalVelocity().y(), twist.getRotationalVelocity().z());
     fprintf(fp, "\n");
+
+    t += dt;
   }
   fclose(fp);
 
@@ -120,14 +121,7 @@ void CubicHermiteSE3Curve::fitCurveWithDerivatives(const std::vector<Time>& time
     DerivativeType derivative;
     // catch the boundaries (i == 0 && i == max)
     if (i == 0) {
-      // First key.
-      if (times.size() > 1) {
-        //        derivative = calculateSlope(times[0], times[1], values[0], values[1]);
-        derivative = initialDerivative;
-      } else {
-        // set velocities == 0 for start point if only one coefficient
-        derivative = initialDerivative;
-      }
+      derivative = initialDerivative;
     } else if (i == times.size() - 1) {
       // Last key.
       //      derivative = calculateSlope(times[i-1], times[i], values[i-1], values[i]);
@@ -136,7 +130,7 @@ void CubicHermiteSE3Curve::fitCurveWithDerivatives(const std::vector<Time>& time
       // Other keys.
       derivative = calculateSlope(times[i - 1], times[i + 1], values[i - 1], values[i + 1]);
     }
-    coefficients.push_back(Coefficient(values[i], derivative));
+    coefficients.emplace_back(values[i], derivative);
   }
 
   manager_.insertCoefficients(times, coefficients, outKeys);
@@ -152,14 +146,14 @@ void CubicHermiteSE3Curve::fitPeriodicCurve(const std::vector<Time>& times, cons
   fitCurveWithDerivatives(times, values, derivative, derivative, outKeys);
 }
 
-CubicHermiteSE3Curve::DerivativeType CubicHermiteSE3Curve::calculateSlope(const Time& timeA, const Time& timeB, const ValueType& T_W_A,
-                                                                          const ValueType& T_W_B) const {
+CubicHermiteSE3Curve::DerivativeType CubicHermiteSE3Curve::calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA,
+                                                                          const ValueType& coeffB) {
   const double inverse_dt_sec = 1.0 / double(timeB - timeA);
   // Original curves implementation was buggy for 180 deg flips.
 
   // Calculate the global angular velocity:
-  const Eigen::Vector3d angularVelocity_rad_s = T_W_B.getRotation().boxMinus(T_W_A.getRotation()) * inverse_dt_sec;
-  const Eigen::Vector3d velocity_m_s = (T_W_B.getPosition().vector() - T_W_A.getPosition().vector()) * inverse_dt_sec;
+  const Eigen::Vector3d angularVelocity_rad_s = coeffB.getRotation().boxMinus(coeffA.getRotation()) * inverse_dt_sec;
+  const Eigen::Vector3d velocity_m_s = (coeffB.getPosition().vector() - coeffA.getPosition().vector()) * inverse_dt_sec;
   // note: unit of derivative is m/s for first 3 and rad/s for last 3 entries
   return DerivativeType(velocity_m_s, angularVelocity_rad_s);
 }
@@ -185,10 +179,11 @@ void CubicHermiteSE3Curve::extend(const std::vector<Time>& /*times*/, const std:
 bool CubicHermiteSE3Curve::evaluate(ValueType& value, Time time) const {
   // Check if the curve is only defined at this one time
   if (manager_.getMaxTime() == time && manager_.getMinTime() == time) {
-    value = manager_.coefficientBegin()->second.coefficient.getTransformation();
+    value = manager_.coefficientBegin()->second.coefficient_.getTransformation();
     return true;
   } else {
-    CoefficientIter a, b;
+    CoefficientIter a;
+    CoefficientIter b;
     bool success = manager_.getCoefficientsAt(time, &a, &b);
     if (!success) {
       std::cerr << "Unable to get the coefficients at time " << time << std::endl;
@@ -196,12 +191,12 @@ bool CubicHermiteSE3Curve::evaluate(ValueType& value, Time time) const {
     }
 
     // read out transformation from coefficient
-    const SE3 T_W_A = a->second.coefficient.getTransformation();
-    const SE3 T_W_B = b->second.coefficient.getTransformation();
+    const SE3 T_W_A = a->second.coefficient_.getTransformation();
+    const SE3 T_W_B = b->second.coefficient_.getTransformation();
 
     // read out derivative from coefficient
-    const Twist d_W_A = a->second.coefficient.getTransformationDerivative();
-    const Twist d_W_B = b->second.coefficient.getTransformationDerivative();
+    const Twist d_W_A = a->second.coefficient_.getTransformationDerivative();
+    const Twist d_W_B = b->second.coefficient_.getTransformationDerivative();
 
     // make alpha
     const double dt_sec = (b->first - a->first);  // * 1e-9;
@@ -235,8 +230,8 @@ bool CubicHermiteSE3Curve::evaluate(ValueType& value, Time time) const {
     // d_W_A contains the global angular velocity, but we need the local angular velocity.
     const Eigen::Vector3d w1 = T_W_A.getRotation().inverseRotate(scaled_d_W_A);
     const Eigen::Vector3d w3 = T_W_B.getRotation().inverseRotate(scaled_d_W_B);
-    const RotationQuaternion expW1_inv = RotationQuaternion().exponentialMap(-w1);
-    const RotationQuaternion expW3_inv = RotationQuaternion().exponentialMap(-w3);
+    const RotationQuaternion expW1_inv = RotationQuaternion::exponentialMap(-w1);
+    const RotationQuaternion expW3_inv = RotationQuaternion::exponentialMap(-w3);
     const RotationQuaternion expW1_Inv_qWB_expW3 = expW1_inv * T_W_A.getRotation().inverted() * T_W_B.getRotation() * expW3_inv;
     const Eigen::Vector3d w2 = expW1_Inv_qWB_expW3.logarithmicMap();
 
@@ -244,9 +239,9 @@ bool CubicHermiteSE3Curve::evaluate(ValueType& value, Time time) const {
     const double dBeta2 = -2.0 * alpha3 + 3.0 * alpha2;
     const double dBeta3 = alpha3;
 
-    const SO3 w1_dBeta1_exp = RotationQuaternion().exponentialMap(dBeta1 * w1);
-    const SO3 w2_dBeta2_exp = RotationQuaternion().exponentialMap(dBeta2 * w2);
-    const SO3 w3_dBeta3_exp = RotationQuaternion().exponentialMap(dBeta3 * w3);
+    const SO3 w1_dBeta1_exp = RotationQuaternion::exponentialMap(dBeta1 * w1);
+    const SO3 w2_dBeta2_exp = RotationQuaternion::exponentialMap(dBeta2 * w2);
+    const SO3 w3_dBeta3_exp = RotationQuaternion::exponentialMap(dBeta3 * w3);
 
     const RotationQuaternion rotation = T_W_A.getRotation() * w1_dBeta1_exp * w2_dBeta2_exp * w3_dBeta3_exp;
 
@@ -260,10 +255,11 @@ bool CubicHermiteSE3Curve::evaluateDerivative(DerivativeType& derivative, Time t
   if (derivativeOrder == 1) {
     // Check if the curve is only defined at this one time
     if (manager_.getMaxTime() == time && manager_.getMinTime() == time) {
-      derivative = manager_.coefficientBegin()->second.coefficient.getTransformationDerivative();
+      derivative = manager_.coefficientBegin()->second.coefficient_.getTransformationDerivative();
       return true;
     } else {
-      CoefficientIter a, b;
+      CoefficientIter a;
+      CoefficientIter b;
       bool success = manager_.getCoefficientsAt(time, &a, &b);
       if (!success) {
         std::cerr << "Unable to get the coefficients at time " << time << std::endl;
@@ -271,12 +267,12 @@ bool CubicHermiteSE3Curve::evaluateDerivative(DerivativeType& derivative, Time t
       }
 
       // read out transformation from coefficient
-      const SE3 T_W_A = a->second.coefficient.getTransformation();
-      const SE3 T_W_B = b->second.coefficient.getTransformation();
+      const SE3 T_W_A = a->second.coefficient_.getTransformation();
+      const SE3 T_W_B = b->second.coefficient_.getTransformation();
 
       // read out derivative from coefficient
-      const Twist d_W_A = a->second.coefficient.getTransformationDerivative();
-      const Twist d_W_B = b->second.coefficient.getTransformationDerivative();
+      const Twist d_W_A = a->second.coefficient_.getTransformationDerivative();
+      const Twist d_W_B = b->second.coefficient_.getTransformationDerivative();
 
       // make alpha
       double dt_sec = (b->first - a->first);
@@ -319,16 +315,16 @@ bool CubicHermiteSE3Curve::evaluateDerivative(DerivativeType& derivative, Time t
 
       const Eigen::Vector3d w1 = T_W_A.getRotation().inverseRotate(scaled_d_W_A);
       const Eigen::Vector3d w3 = T_W_B.getRotation().inverseRotate(scaled_d_W_B);
-      const RotationQuaternion expW1_inv = RotationQuaternion().exponentialMap(-w1);
-      const RotationQuaternion expW3_inv = RotationQuaternion().exponentialMap(-w3);
+      const RotationQuaternion expW1_inv = RotationQuaternion::exponentialMap(-w1);
+      const RotationQuaternion expW3_inv = RotationQuaternion::exponentialMap(-w3);
 
       const RotationQuaternion expW1_Inv_qWB_expW3 = expW1_inv * T_W_A.getRotation().inverted() * T_W_B.getRotation() * expW3_inv;
 
       const Eigen::Vector3d w2 = expW1_Inv_qWB_expW3.logarithmicMap();
 
-      const SO3 w1_beta1_exp = RotationQuaternion().exponentialMap((beta1)*w1);
-      const SO3 w2_beta2_exp = RotationQuaternion().exponentialMap((beta2)*w2);
-      const SO3 w3_beta3_exp = RotationQuaternion().exponentialMap((beta3)*w3);
+      const SO3 w1_beta1_exp = RotationQuaternion::exponentialMap((beta1)*w1);
+      const SO3 w2_beta2_exp = RotationQuaternion::exponentialMap((beta2)*w2);
+      const SO3 w3_beta3_exp = RotationQuaternion::exponentialMap((beta3)*w3);
 
       const RotationQuaternionDiff w1_dbeta1(0.0, dbeta1 * w1);
       const RotationQuaternionDiff w2_dbeta2(0.0, dbeta2 * w2);
@@ -359,7 +355,8 @@ bool CubicHermiteSE3Curve::evaluateDerivative(DerivativeType& derivative, Time t
 }
 
 bool CubicHermiteSE3Curve::evaluateLinearAcceleration(kindr::Acceleration3D& linearAcceleration, Time time) {
-  CoefficientIter a, b;
+  CoefficientIter a;
+  CoefficientIter b;
   bool success = manager_.getCoefficientsAt(time, &a, &b);
   if (!success) {
     std::cerr << "Unable to get the coefficients at time " << time << std::endl;
@@ -367,12 +364,12 @@ bool CubicHermiteSE3Curve::evaluateLinearAcceleration(kindr::Acceleration3D& lin
   }
 
   // read out transformation from coefficient
-  const SE3 T_W_A = a->second.coefficient.getTransformation();
-  const SE3 T_W_B = b->second.coefficient.getTransformation();
+  const SE3 T_W_A = a->second.coefficient_.getTransformation();
+  const SE3 T_W_B = b->second.coefficient_.getTransformation();
 
   // read out derivative from coefficient
-  const Twist d_W_A = a->second.coefficient.getTransformationDerivative();
-  const Twist d_W_B = b->second.coefficient.getTransformationDerivative();
+  const Twist d_W_A = a->second.coefficient_.getTransformationDerivative();
+  const Twist d_W_B = b->second.coefficient_.getTransformationDerivative();
 
   // make alpha
   double dt_sec = (b->first - a->first);
@@ -469,11 +466,6 @@ bool CubicHermiteSE3Curve::evaluateLinearAcceleration(kindr::Acceleration3D& lin
 //  graph->push_back(f1);
 //
 //}
-
-void CubicHermiteSE3Curve::setTimeRange(Time /*minTime*/, Time /*maxTime*/) {
-  // \todo Abel and Renaud
-  CHECK(false) << "Not implemented";
-}
 
 /// \brief Evaluate the angular velocity of Frame b as seen from Frame a, expressed in Frame a.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularVelocityA(Time /*time*/) {
@@ -573,8 +565,8 @@ void CubicHermiteSE3Curve::saveCurveAtTimes(const std::string& filename, std::ve
 
   std::vector<Eigen::VectorXd> curveValues;
   ValueType val;
-  for (size_t i = 0; i < times.size(); ++i) {
-    evaluate(val, times[i]);
+  for (auto time : times) {
+    evaluate(val, time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     curveValues.push_back(v);

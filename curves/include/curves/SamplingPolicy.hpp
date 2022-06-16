@@ -12,7 +12,7 @@
 namespace curves {
 
 class SamplingPolicy {
- protected:
+ private:
   int measurementsSinceLastExtend_;
   int minimumMeasurements_;
   Time minSamplingPeriod_;
@@ -24,33 +24,23 @@ class SamplingPolicy {
   SamplingPolicy(int minimumMeasurements, Time minSamplingPeriod)
       : measurementsSinceLastExtend_(0), minimumMeasurements_(minimumMeasurements), minSamplingPeriod_(minSamplingPeriod), lastExtend_(0) {}
 
-  ~SamplingPolicy() {}
+  template <typename CurveType, typename ValueType>
+  Key interpolationExtend(const Time& time, const ValueType& value, CurveType* curve);
 
   template <typename CurveType, typename ValueType>
-  Key interpolationExtend(const Time& time, const ValueType& value, CurveType* curve) {
-    CHECK(false) << "no interpolation extend policy implemented for " << typeid(CurveType).name();
-    return Key();
-  }
+  Key defaultExtend(const Time& time, const ValueType& value, CurveType* curve);
 
   template <typename CurveType, typename ValueType>
-  Key defaultExtend(const Time& time, const ValueType& value, CurveType* curve) {
-    CHECK(false) << "no default extend policy implemented for " << typeid(CurveType).name();
-    return Key();
-  }
-
-  template <typename CurveType, typename ValueType>
-  void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, CurveType* curve, std::vector<Key>* outKeys = NULL) {
-    CHECK(false) << "no extend policy implemented for " << typeid(CurveType).name();
-  }
+  void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, CurveType* curve, std::vector<Key>* outKeys);
 
   /// Print the value of the coefficient, for debugging and unit tests
-  int getMeasurementsSinceLastExtend() { return measurementsSinceLastExtend_; }
+  int getMeasurementsSinceLastExtend() const { return measurementsSinceLastExtend_; }
 
-  int getMinimumMeasurements() { return minimumMeasurements_; }
+  int getMinimumMeasurements() const { return minimumMeasurements_; }
 
-  Time getMinSamplingPeriod() { return minSamplingPeriod_; }
+  Time getMinSamplingPeriod() const { return minSamplingPeriod_; }
 
-  Time getLastExtendTime() { return lastExtend_; }
+  Time getLastExtendTime() const { return lastExtend_; }
 
   void setLastExtendTime(Time time) { lastExtend_ = time; }
 
@@ -60,7 +50,7 @@ class SamplingPolicy {
 
   void incrementMeasurementsTaken(int num) { measurementsSinceLastExtend_ = measurementsSinceLastExtend_ + num; }
 
-  void setMeasurementsSinceLastExtend_(int num) { measurementsSinceLastExtend_ = num; }
+  void setMeasurementsSinceLastExtend(int num) { measurementsSinceLastExtend_ = num; }
 };
 
 }  // namespace curves

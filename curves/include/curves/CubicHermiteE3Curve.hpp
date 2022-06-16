@@ -64,8 +64,6 @@ class CubicHermiteE3Curve {
   using Acceleration = HermiteE3Knot::Acceleration;
 
  public:
-  virtual ~CubicHermiteE3Curve() = default;
-
   /// Print the value of the coefficient, for debugging and unit tests
   virtual void print(const std::string& str) const;
 
@@ -83,24 +81,32 @@ class CubicHermiteE3Curve {
   int size() const;
 
   /// \brief calculate the slope between 2 coefficients
-  DerivativeType calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA, const ValueType& coeffB) const;
+  static DerivativeType calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA, const ValueType& coeffB) {
+    const double inverse_dt_sec = 1.0 / double(timeB - timeA);
+    // Original curves implementation was buggy for 180 deg flips.
+
+    // Calculate the global angular velocity:
+    const DerivativeType velocity_m_s = (coeffB - coeffA) * inverse_dt_sec;
+    // note: unit of derivative is m/s for first 3 and rad/s for last 3 entries
+    return velocity_m_s;
+  }
 
   /// Extend the curve so that it can be evaluated at these times.
   /// Try to make the curve fit to the values.
   /// Note: Assumes that extend times strictly increase the curve time
-  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
+  virtual void extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys);
 
   /// \brief Fit a new curve to these data points.
   ///
   /// The existing curve will be cleared.fitCurveWithDerivatives
   /// Underneath the curve should have some default policy for fitting.
-  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
+  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys);
 
   virtual void fitCurveWithDerivatives(const std::vector<Time>& times, const std::vector<ValueType>& values,
                                        const DerivativeType& initialDerivative, const DerivativeType& finalDerivative,
-                                       std::vector<Key>* outKeys = nullptr);
+                                       std::vector<Key>* outKeys);
 
-  virtual void fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
+  virtual void fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys);
   /// Evaluate the ambient space of the curve.
   virtual bool evaluate(ValueType& value, Time time) const;
 

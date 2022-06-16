@@ -11,10 +11,6 @@
 
 namespace curves {
 
-SlerpSE3Curve::SlerpSE3Curve() : SE3Curve() {}
-
-SlerpSE3Curve::~SlerpSE3Curve() {}
-
 void SlerpSE3Curve::print(const std::string& str) const {
   std::cout << "=========================================" << std::endl;
   std::cout << "=========== Slerp SE3 CURVE =============" << std::endl;
@@ -28,14 +24,15 @@ void SlerpSE3Curve::print(const std::string& str) const {
   manager_.getKeys(&keys);
   std::cout << "curve defined between times: " << manager_.getMinTime() << " and " << manager_.getMaxTime() << std::endl;
   double sum_dp = 0;
-  Eigen::Vector3d p1, p2;
+  Eigen::Vector3d p1;
+  Eigen::Vector3d p2;
   for (size_t i = 0; i < times.size() - 1; ++i) {
     p1 = evaluate(times[i]).getPosition().vector();
     p2 = evaluate(times[i + 1]).getPosition().vector();
     sum_dp += (p1 - p2).norm();
   }
-  std::cout << "average dt between coefficients: " << (manager_.getMaxTime() - manager_.getMinTime()) / (times.size() - 1) << " ns."
-            << std::endl;
+  std::cout << "average dt between coefficients: "
+            << (manager_.getMaxTime() - manager_.getMinTime()) / static_cast<double>(times.size() - 1) << " ns." << std::endl;
   std::cout << "average distance between coefficients: " << sum_dp / double((times.size() - 1)) << " m." << std::endl;
   std::cout << "=========================================" << std::endl;
   for (size_t i = 0; i < manager_.size(); i++) {
@@ -65,7 +62,7 @@ int SlerpSE3Curve::size() const {
 
 void SlerpSE3Curve::fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys) {
   CHECK_EQ(times.size(), values.size());
-  if (times.size() > 0) {
+  if (!times.empty()) {
     clear();
     manager_.insertCoefficients(times, values, outKeys);
   }
@@ -73,13 +70,15 @@ void SlerpSE3Curve::fitCurve(const std::vector<Time>& times, const std::vector<V
 
 void SlerpSE3Curve::setCurve(const std::vector<Time>& times, const std::vector<ValueType>& values) {
   CHECK_EQ(times.size(), values.size());
-  if (times.size() > 0) {
+  if (!times.empty()) {
     manager_.insertCoefficients(times, values);
   }
 }
 
 void SlerpSE3Curve::extend(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys) {
-  if (times.size() != values.size()) CHECK_EQ(times.size(), values.size()) << "number of times and number of coefficients don't match";
+  if (times.size() != values.size()) {
+    CHECK_EQ(times.size(), values.size()) << "number of times and number of coefficients don't match";
+  }
 
   slerpPolicy_.extend<SlerpSE3Curve, ValueType>(times, values, this, outKeys);
 }
@@ -262,9 +261,9 @@ void SlerpSE3Curve::clear() {
 void SlerpSE3Curve::transformCurve(const ValueType T) {
   std::vector<Time> coefTimes;
   manager_.getTimes(&coefTimes);
-  for (size_t i = 0; i < coefTimes.size(); ++i) {
+  for (auto coefTime : coefTimes) {
     // Apply a rigid transformation to every coefficient (on the left side).
-    manager_.insertCoefficient(coefTimes[i], T * evaluate(coefTimes[i]));
+    manager_.insertCoefficient(coefTime, T * evaluate(coefTime));
   }
 }
 
@@ -280,8 +279,8 @@ void SlerpSE3Curve::saveCurveAtTimes(const std::string& filename, std::vector<Ti
 
   std::vector<Eigen::VectorXd> curveValues;
   ValueType val;
-  for (size_t i = 0; i < times.size(); ++i) {
-    val = evaluate(times[i]);
+  for (auto time : times) {
+    val = evaluate(time);
     v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
         val.getRotation().y(), val.getRotation().z();
     curveValues.push_back(v);

@@ -11,8 +11,8 @@
 namespace curves {
 
 struct ScalarCurveConfig {
-  typedef double ValueType;
-  typedef double DerivativeType;
+  using ValueType = double;
+  using DerivativeType = double;
 };
 
 }  // namespace curves

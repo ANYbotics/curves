@@ -370,7 +370,7 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
 template <int splineOrder_>
 bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions) {
   bool success = true;
-  const int numSplines = knotDurations.size() - 1;
+  const auto numSplines = knotDurations.size() - 1;
   constexpr auto num_coeffs_spline = SplineType::coefficientCount;
   typename SplineType::SplineCoefficients coefficients;
 
@@ -384,7 +384,7 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
 
   this->reserveSplines(numSplines);
 
-  for (int splineId = 0; splineId < numSplines; ++splineId) {
+  for (std::size_t splineId = 0; splineId < numSplines; ++splineId) {
     const double duration = knotDurations[splineId + 1] - knotDurations[splineId];
 
     if (duration <= 0.0) {
@@ -403,24 +403,24 @@ template <int splineOrder_>
 void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::VectorXd& initialConditions, unsigned int& constraintIdx) {
   // Initial position.
   if (initialConditions.size() > 0) {
-    SplineType::getTimeVectorAtZero(
-        equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)));
+    equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
+        SplineType::getTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = initialConditions(0);
     ++constraintIdx;
   }
 
   // Initial velocity.
   if (initialConditions.size() > 1) {
-    SplineType::getDiffTimeVectorAtZero(
-        equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)));
+    equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
+        SplineType::getDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = initialConditions(1);
     ++constraintIdx;
   }
 
   // Initial acceleration.
   if (initialConditions.size() > 2) {
-    SplineType::getDDiffTimeVectorAtZero(
-        equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)));
+    equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
+        SplineType::getDDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = initialConditions(2);
     ++constraintIdx;
   }
@@ -428,30 +428,29 @@ void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::
 
 template <int splineOrder_>
 void PolynomialSplineContainer<splineOrder_>::addFinalConditions(const Eigen::VectorXd& finalConditions, unsigned int& constraintIdx,
-                                                                 double lastSplineDuration, unsigned int lastSplineId) {
-  // Time container
-  typename SplineType::EigenTimeVectorType timeVec;
-
+                                                                 const double lastSplineDuration, unsigned int lastSplineId) {
   // Initial position.
   if (finalConditions.size() > 0) {
-    SplineType::getTimeVector(timeVec, lastSplineDuration);
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) = timeVec;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) =
+        SplineType::getTimeVector(lastSplineDuration);
     equalityConstraintTargetValues_(constraintIdx) = finalConditions(0);
     constraintIdx++;
   }
 
   // Initial velocity.
   if (finalConditions.size() > 1) {
-    SplineType::getDTimeVector(timeVec, lastSplineDuration);
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) = timeVec;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) =
+        SplineType::getDTimeVector(lastSplineDuration);
+    ;
     equalityConstraintTargetValues_(constraintIdx) = finalConditions(1);
     constraintIdx++;
   }
 
   // Initial acceleration.
   if (finalConditions.size() > 2) {
-    SplineType::getDDTimeVector(timeVec, lastSplineDuration);
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) = timeVec;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) =
+        SplineType::getDDTimeVector(lastSplineDuration);
+    ;
     equalityConstraintTargetValues_(constraintIdx) = finalConditions(2);
     constraintIdx++;
   }
@@ -461,41 +460,33 @@ template <int splineOrder_>
 void PolynomialSplineContainer<splineOrder_>::addJunctionsConditions(const std::vector<double>& splineDurations,
                                                                      const std::vector<double>& knotPositions, unsigned int& constraintIdx,
                                                                      unsigned int num_junctions) {
-  // Time containers.
-  typename SplineType::EigenTimeVectorType timeVec0, dTimeVec0, ddTimeVec0;
-  typename SplineType::EigenTimeVectorType timeVecTf, dTimeVecTf, ddTimeVecTf;
-
-  // Get time container at zero time.
-  SplineType::getTimeVectorAtZero(timeVec0);
-  SplineType::getDTimeVectorAtZero(dTimeVec0);
-  SplineType::getDDTimeVectorAtZero(ddTimeVec0);
-
   for (unsigned int splineId = 0; splineId < num_junctions; splineId++) {
     const unsigned int nextSplineId = splineId + 1;
 
-    // Get time container at spline duration.
-    SplineType::getTimeVector(timeVecTf, splineDurations[splineId]);
-    SplineType::getDTimeVector(dTimeVecTf, splineDurations[splineId]);
-    SplineType::getDDTimeVector(ddTimeVecTf, splineDurations[splineId]);
-
     // Smooth position transition with fixed positions.
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) = timeVecTf;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) =
+        SplineType::getTimeVector(splineDurations[splineId]);
     equalityConstraintTargetValues_(constraintIdx) = knotPositions[nextSplineId];
     constraintIdx++;
 
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) = timeVec0;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) =
+        SplineType::getTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = knotPositions[nextSplineId];
     constraintIdx++;
 
     // Smooth velocity transition.
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) = dTimeVecTf;
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) = -dTimeVec0;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) =
+        SplineType::getDTimeVector(splineDurations[splineId]);
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) =
+        -SplineType::getDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = 0.0;
     constraintIdx++;
 
     // Smooth acceleration transition.
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) = ddTimeVecTf;
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) = -ddTimeVec0;
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) =
+        SplineType::getDDTimeVector(splineDurations[splineId]);
+    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) =
+        -SplineType::getDDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = 0.0;
     constraintIdx++;
   }

@@ -8,44 +8,48 @@
 
 #pragma once
 
-#include <Eigen/Core>
-#include <boost/unordered_map.hpp>
+#include <cstddef>
 #include <map>
+#include <utility>
 #include <vector>
+
+#include <boost/unordered_map.hpp>
+
+#include <Eigen/Core>
+
 #include "curves/Curve.hpp"
 
 namespace curves {
 
-typedef size_t Key;
+using Key = std::size_t;
 
 template <class Coefficient>
 class LocalSupport2CoefficientManager {
  public:
-  typedef Coefficient CoefficientType;
+  using CoefficientType = Coefficient;
 
   struct KeyCoefficient {
-    Key key;
-    CoefficientType coefficient;
+    Key key_{0};
+    CoefficientType coefficient_;
 
-    KeyCoefficient(const Key key, const Coefficient& coefficient) : key(key), coefficient(coefficient) {}
+    KeyCoefficient(const Key key, Coefficient coefficient) : key_(key), coefficient_(std::move(coefficient)) {}
     KeyCoefficient() = default;
 
     bool equals(const KeyCoefficient& other) const {
-      // TODO Note: here we assume that == operator is implemented by the coefficient.
+      // Note: here we assume that == operator is implemented by the coefficient.
       // Could not use gtsam traits as the gtsam namespace is not visible to this class.
       // Is this correct?
-      return key == other.key && coefficient == other.coefficient;
+      return key_ == other.key && coefficient_ == other.coefficient;
     }
 
     bool operator==(const KeyCoefficient& other) const { return this->equals(other); }
   };
 
-  typedef std::map<Time, KeyCoefficient> TimeToKeyCoefficientMap;
-  typedef typename TimeToKeyCoefficientMap::const_iterator CoefficientIter;
-  /// Key/Coefficient pairs
-  typedef boost::unordered_map<size_t, Coefficient> CoefficientMap;
+  using TimeToKeyCoefficientMap = std::map<Time, KeyCoefficient>;
+  using CoefficientIter = typename TimeToKeyCoefficientMap::const_iterator;
 
-  virtual ~LocalSupport2CoefficientManager() = default;
+  /// Key/Coefficient pairs
+  using CoefficientMap = boost::unordered_map<size_t, Coefficient>;
 
   /// Compare this Coefficient manager with another for equality.
   bool equals(const LocalSupport2CoefficientManager& other) const;
@@ -80,10 +84,10 @@ class LocalSupport2CoefficientManager {
   ///
   /// If outKeys is not NULL, this function will not check if
   /// it is empty; new keys will be appended to this vector.
-  void insertCoefficients(const std::vector<Time>& times, const std::vector<Coefficient>& values, std::vector<Key>* outKeys = NULL);
+  void insertCoefficients(const std::vector<Time>& times, const std::vector<Coefficient>& values, std::vector<Key>* outKeys = nullptr);
 
   /// \brief Efficient function for adding a coefficient at the end of the map
-  void addCoefficientAtEnd(Time time, const Coefficient& coefficient, std::vector<Key>* outKeys = NULL);
+  void addCoefficientAtEnd(Time time, const Coefficient& coefficient, std::vector<Key>* outKeys = nullptr);
 
   /// \brief Modify a coefficient by specifying a new time and value
   void modifyCoefficient(typename TimeToKeyCoefficientMap::iterator it, Time time, const Coefficient& coefficient);

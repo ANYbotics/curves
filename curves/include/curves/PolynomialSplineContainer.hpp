@@ -31,7 +31,13 @@ class PolynomialSplineContainer {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   PolynomialSplineContainer();
+  PolynomialSplineContainer(const PolynomialSplineContainer&) = default;
+  PolynomialSplineContainer(PolynomialSplineContainer&&) = default;
+
   virtual ~PolynomialSplineContainer() = default;
+
+  PolynomialSplineContainer& operator=(const PolynomialSplineContainer<splineOrder_>&) = default;
+  PolynomialSplineContainer& operator=(PolynomialSplineContainer<splineOrder_>&&) = default;
 
   //! Get a pointer to the spline with a given index.
   SplineType* getSpline(int splineIndex);
@@ -54,7 +60,7 @@ class PolynomialSplineContainer {
   }
 
   //! Reserve memory for the spline container.
-  bool reserveSplines(const unsigned int numSplines);
+  bool reserveSplines(unsigned int numSplines);
 
   //! Clear spline container.
   bool reset();
@@ -146,14 +152,15 @@ class PolynomialSplineContainer {
 
   void addInitialConditions(const Eigen::VectorXd& initialConditions, unsigned int& constraintIdx);
 
-  void addFinalConditions(const Eigen::VectorXd& finalConditions, unsigned int& constraintIdx, const double lastSplineDuration,
-                          const unsigned int lastSplineId);
+  void addFinalConditions(const Eigen::VectorXd& finalConditions, unsigned int& constraintIdx, double lastSplineDuration,
+                          unsigned int lastSplineId);
 
   void addJunctionsConditions(const std::vector<double>& splineDurations, const std::vector<double>& knotPositions,
-                              unsigned int& constraintIdx, const unsigned int num_junctions);
+                              unsigned int& constraintIdx, unsigned int num_junctions);
 
-  bool extractSplineCoefficients(const Eigen::VectorXd& coeffs, const std::vector<double>& splineDurations, const unsigned int num_splines);
+  bool extractSplineCoefficients(const Eigen::VectorXd& coeffs, const std::vector<double>& splineDurations, unsigned int numSplines);
 
+ private:
   //! Conjunction of smoothly interconnected splines.
   SplineList splines_;
 

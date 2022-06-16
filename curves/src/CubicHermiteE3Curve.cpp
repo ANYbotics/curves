@@ -34,7 +34,7 @@ void CubicHermiteE3Curve::print(const std::string& str) const {
 
 bool CubicHermiteE3Curve::writeEvalToFile(const std::string& filename, int nSamples) const {
   FILE* fp = fopen(filename.c_str(), "w");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     std::cout << "Could not open file to write" << std::endl;
     return false;
   }
@@ -48,7 +48,11 @@ bool CubicHermiteE3Curve::writeEvalToFile(const std::string& filename, int nSamp
   Time dt = (getMaxTime() - getMinTime()) / (nSamples - 1);
   ValueType position;
   DerivativeType velocity;
-  for (Time t = getMinTime(); t < getMaxTime(); t += dt) {
+  Time t = getMinTime();
+  while (true) {
+    if (t > getMaxTime()) {
+      break;
+    }
     if (!evaluate(position, t)) {
       std::cout << "Could not evaluate at time " << t << std::endl;
       fclose(fp);
@@ -63,6 +67,7 @@ bool CubicHermiteE3Curve::writeEvalToFile(const std::string& filename, int nSamp
     fprintf(fp, "%lf %lf %lf ", position.x(), position.y(), position.z());
     fprintf(fp, "%lf %lf %lf ", velocity.x(), velocity.y(), velocity.z());
     fprintf(fp, "\n");
+    t += dt;
   }
   fclose(fp);
 
@@ -90,18 +95,6 @@ int CubicHermiteE3Curve::size() const {
   return manager_.size();
 }
 
-/// \brief calculate the slope between 2 coefficients
-CubicHermiteE3Curve::DerivativeType CubicHermiteE3Curve::calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA,
-                                                                        const ValueType& coeffB) const {
-  const double inverse_dt_sec = 1.0 / double(timeB - timeA);
-  // Original curves implementation was buggy for 180 deg flips.
-
-  // Calculate the global angular velocity:
-  const DerivativeType velocity_m_s = (coeffB - coeffA) * inverse_dt_sec;
-  // note: unit of derivative is m/s for first 3 and rad/s for last 3 entries
-  return velocity_m_s;
-}
-
 void CubicHermiteE3Curve::extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/,
                                  std::vector<Key>* /*outKeys*/) {}
 
@@ -111,11 +104,9 @@ void CubicHermiteE3Curve::fitCurve(const std::vector<Time>& times, const std::ve
 
 void CubicHermiteE3Curve::fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values,
                                            std::vector<Key>* outKeys) {
-  /* We assume that the first and last points coincide.
-   *
-   */
+  // Note: We assume that the first and last points coincide.
   const size_t nPoints = times.size();
-  // TODO Add a check on nPoints which should be >= 2 otherwise that breaks.
+  // TODO(anyone) Add a check on nPoints which should be >= 2 otherwise that breaks.
   DerivativeType derivative = calculateSlope(times[nPoints - 2], times[1], values[nPoints - 2], values[1]);
   fitCurveWithDerivatives(times, values, derivative, derivative, outKeys);
 }
@@ -131,26 +122,19 @@ void CubicHermiteE3Curve::fitCurveWithDerivatives(const std::vector<Time>& times
   // use Catmull-Rom interpolation for derivatives on knot points
   for (size_t i = 0; i < times.size(); ++i) {
     DerivativeType derivative;
-    // catch the boundaries (i == 0 && i == max)
+    // Treat the boundaries (i == 0 && i == max) different from the internal points
     if (i == 0) {
       // First key.
-      if (times.size() > 1) {
-        //        derivative = calculateSlope(times[0], times[1], values[0], values[1]);
-        derivative = initialDerivative;
-      } else {
-        // set velocities == 0 for start point if only one coefficient
-        derivative = initialDerivative;
-      }
+      derivative = initialDerivative;
     } else if (i == times.size() - 1) {
       // Last key.
-      //      derivative = calculateSlope(times[i-1], times[i], values[i-1], values[i]);
       derivative = finalDerivative;
     } else {
       // Other keys.
       derivative = calculateSlope(times[i - 1], times[i + 1], values[i - 1], values[i + 1]);
     }
 
-    coefficients.push_back(Coefficient(values[i], derivative));
+    coefficients.emplace_back(values[i], derivative);
   }
 
   manager_.insertCoefficients(times, coefficients, outKeys);
@@ -160,10 +144,11 @@ void CubicHermiteE3Curve::fitCurveWithDerivatives(const std::vector<Time>& times
 bool CubicHermiteE3Curve::evaluate(ValueType& value, Time time) const {
   // Check if the curve is only defined at this one time
   if (manager_.getMaxTime() == time && manager_.getMinTime() == time) {
-    value = manager_.coefficientBegin()->second.coefficient.getPosition();
+    value = manager_.coefficientBegin()->second.coefficient_.getPosition();
     return true;
   } else {
-    CoefficientIter a, b;
+    CoefficientIter a;
+    CoefficientIter b;
     bool success = manager_.getCoefficientsAt(time, &a, &b);
     if (!success) {
       std::cerr << "Unable to get the coefficients at time " << time << std::endl;
@@ -171,12 +156,12 @@ bool CubicHermiteE3Curve::evaluate(ValueType& value, Time time) const {
     }
 
     // read out transformation from coefficient
-    const ValueType T_W_A = a->second.coefficient.getPosition();
-    const ValueType T_W_B = b->second.coefficient.getPosition();
+    const ValueType T_W_A = a->second.coefficient_.getPosition();
+    const ValueType T_W_B = b->second.coefficient_.getPosition();
 
     // read out derivative from coefficient
-    const DerivativeType d_W_A = a->second.coefficient.getVelocity();
-    const DerivativeType d_W_B = b->second.coefficient.getVelocity();
+    const DerivativeType d_W_A = a->second.coefficient_.getVelocity();
+    const DerivativeType d_W_B = b->second.coefficient_.getVelocity();
 
     // make alpha
     const double dt_sec = (b->first - a->first);
@@ -207,10 +192,11 @@ bool CubicHermiteE3Curve::evaluateDerivative(DerivativeType& derivative, Time ti
   if (derivativeOrder == 1) {
     // Check if the curve is only defined at this one time
     if (manager_.getMaxTime() == time && manager_.getMinTime() == time) {
-      derivative = manager_.coefficientBegin()->second.coefficient.getVelocity();
+      derivative = manager_.coefficientBegin()->second.coefficient_.getVelocity();
       return true;
     } else {
-      CoefficientIter a, b;
+      CoefficientIter a;
+      CoefficientIter b;
       bool success = manager_.getCoefficientsAt(time, &a, &b);
       if (!success) {
         std::cerr << "Unable to get the coefficients at time " << time << std::endl;
@@ -218,12 +204,12 @@ bool CubicHermiteE3Curve::evaluateDerivative(DerivativeType& derivative, Time ti
       }
 
       // read out transformation from coefficient
-      const ValueType T_W_A = a->second.coefficient.getPosition();
-      const ValueType T_W_B = b->second.coefficient.getPosition();
+      const ValueType T_W_A = a->second.coefficient_.getPosition();
+      const ValueType T_W_B = b->second.coefficient_.getPosition();
 
       // read out derivative from coefficient
-      const DerivativeType d_W_A = a->second.coefficient.getVelocity();
-      const DerivativeType d_W_B = b->second.coefficient.getVelocity();
+      const DerivativeType d_W_A = a->second.coefficient_.getVelocity();
+      const DerivativeType d_W_B = b->second.coefficient_.getVelocity();
 
       // make alpha
       double dt_sec = (b->first - a->first);
@@ -257,7 +243,8 @@ bool CubicHermiteE3Curve::evaluateDerivative(DerivativeType& derivative, Time ti
 }
 
 bool CubicHermiteE3Curve::evaluateLinearAcceleration(Acceleration& linearAcceleration, Time time) const {
-  CoefficientIter a, b;
+  CoefficientIter a;
+  CoefficientIter b;
   bool success = manager_.getCoefficientsAt(time, &a, &b);
   if (!success) {
     std::cerr << "Unable to get the coefficients at time " << time << std::endl;
@@ -265,12 +252,12 @@ bool CubicHermiteE3Curve::evaluateLinearAcceleration(Acceleration& linearAcceler
   }
 
   // read out transformation from coefficient
-  const ValueType T_W_A = a->second.coefficient.getPosition();
-  const ValueType T_W_B = b->second.coefficient.getPosition();
+  const ValueType T_W_A = a->second.coefficient_.getPosition();
+  const ValueType T_W_B = b->second.coefficient_.getPosition();
 
   // read out derivative from coefficient
-  const DerivativeType d_W_A = a->second.coefficient.getVelocity();
-  const DerivativeType d_W_B = b->second.coefficient.getVelocity();
+  const DerivativeType d_W_A = a->second.coefficient_.getVelocity();
+  const DerivativeType d_W_B = b->second.coefficient_.getVelocity();
 
   // make alpha
   double dt_sec = (b->first - a->first);

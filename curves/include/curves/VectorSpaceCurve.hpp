@@ -16,12 +16,11 @@ namespace curves {
 template <int N>
 class VectorSpaceCurve : public Curve<VectorSpaceConfig<N> > {
  public:
-  typedef Curve<VectorSpaceConfig<N> > Parent;
-  typedef typename Parent::ValueType ValueType;
-  typedef typename Parent::DerivativeType DerivativeType;
+  using Parent = Curve<VectorSpaceConfig<N> >;
+  using ValueType = typename Parent::ValueType;
+  using DerivativeType = typename Parent::DerivativeType;
 
   VectorSpaceCurve() : dimension_(N) {}
-  virtual ~VectorSpaceCurve() {}
 
   /// \brief Get the dimension of this curve
   size_t dim() const { return N; }

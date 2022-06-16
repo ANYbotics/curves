@@ -26,17 +26,15 @@ namespace curves {
 template <typename SplineContainerType_>
 class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
  public:
-  typedef Curve<ScalarCurveConfig> Parent;
-  typedef typename Parent::ValueType ValueType;
-  typedef typename Parent::DerivativeType DerivativeType;
+  using Parent = Curve<ScalarCurveConfig>;
+  using ValueType = typename Parent::ValueType;
+  using DerivativeType = typename Parent::DerivativeType;
 
   using SplineContainerType = SplineContainerType_;
 
   PolynomialSplineScalarCurve() : Parent(), container_(), minTime_(0.0) {}
 
-  virtual ~PolynomialSplineScalarCurve() {}
-
-  virtual void print(const std::string& /*str*/) const {
+  void print(const std::string& /*str*/) const override {
     const double minTime = getMinTime();
     const double maxTime = getMaxTime();
     double timeAtEval = minTime;
@@ -44,9 +42,9 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     double timeDiff = (maxTime - minTime) / (nPoints - 1);
 
     for (int i = 0; i < nPoints; i++) {
-      double firstDerivative;
-      double secondDerivative;
-      double value;
+      double firstDerivative = 0.;
+      double secondDerivative = 0.;
+      double value = 0.;
       evaluate(value, timeAtEval);
       evaluateDerivative(firstDerivative, timeAtEval, 1);
       evaluateDerivative(secondDerivative, timeAtEval, 2);
@@ -55,17 +53,17 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     }
   }
 
-  virtual Time getMinTime() const { return minTime_; }
+  Time getMinTime() const override { return minTime_; }
 
-  virtual Time getMaxTime() const { return container_.getContainerDuration() + minTime_; }
+  Time getMaxTime() const override { return container_.getContainerDuration() + minTime_; }
 
-  virtual bool evaluate(ValueType& value, Time time) const {
+  bool evaluate(ValueType& value, Time time) const override {
     time -= minTime_;
     value = container_.getPositionAtTime(time);
     return true;
   }
 
-  virtual bool evaluateDerivative(DerivativeType& value, Time time, unsigned derivativeOrder) const {
+  bool evaluateDerivative(DerivativeType& value, Time time, unsigned derivativeOrder) const override {
     time -= minTime_;
     switch (derivativeOrder) {
       case (1): {
@@ -83,24 +81,22 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     return true;
   }
 
-  virtual void extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/,
-                      std::vector<Key>* /*outKeys*/ = NULL) override {
+  void extend(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/, std::vector<Key>* /*outKeys*/) override {
     throw std::runtime_error("extend is not yet implemented!");
   }
 
-  virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values,
-                        std::vector<Key>* /*outKeys*/ = NULL) override {
+  void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* /*outKeys*/) override {
     container_.setData(times, values, 0.0, 0.0, 0.0, 0.0);
     minTime_ = times.front();
   }
 
   virtual void fitCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, double initialVelocity,
-                        double initialAcceleration, double finalVelocity, double finalAcceleration, std::vector<Key>* /*outKeys*/ = NULL) {
+                        double initialAcceleration, double finalVelocity, double finalAcceleration, std::vector<Key>* /*outKeys*/) {
     container_.setData(times, values, initialVelocity, initialAcceleration, finalVelocity, finalAcceleration);
     minTime_ = times.front();
   }
 
-  virtual void fitCurve(const std::vector<SplineOptions>& optionList, std::vector<Key>* /*outKeys*/ = NULL) {
+  virtual void fitCurve(const std::vector<SplineOptions>& optionList, std::vector<Key>* /*outKeys*/) {
     container_.reserveSplines(optionList.size());
     for (const auto& options : optionList) {
       container_.addSpline(PolynomialSplineQuintic(options));
@@ -108,14 +104,14 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     minTime_ = 0.0;
   }
 
-  virtual void clear() {
+  void clear() override {
     container_.reset();
     minTime_ = 0.0;
   }
 
-  virtual void transformCurve(const ValueType /*T*/) { CHECK(false) << "Not implemented"; }
+  void transformCurve(const ValueType /*T*/) override { CHECK(false) << "Not implemented"; }
 
- protected:
+ private:
   SplineContainerType container_;
   Time minTime_;
 };

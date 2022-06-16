@@ -38,7 +38,7 @@ bool RosMultiDOFJointTrajectoryTranslationInterface::fromMessage(const trajector
 
   // TODO Make this work also with velocities and accelerations.
 
-  fitCurve(times, values);
+  fitCurve(times, values, nullptr);
 
   return true;
 }
