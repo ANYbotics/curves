@@ -17,6 +17,7 @@ PolynomialSplineContainer<splineOrder_>::PolynomialSplineContainer()
       equalityConstraintTargetValues_() {
   // Make sure that the container is correctly emptied.
   reset();
+  splines_.reserve(maxKnots_ - 1);
 }
 
 template <int splineOrder_>
@@ -220,6 +221,7 @@ template <int splineOrder_>
 bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions,
                                                       double initialVelocity, double initialAcceleration, double finalVelocity,
                                                       double finalAcceleration) {
+  checkNumKnotsValid(knotDurations, knotPositions);
   bool success = reset();
 
   // Set up optimization parameters.
@@ -266,13 +268,11 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   unsigned int constraintIdx = 0;
 
   // Initial conditions.
-  Eigen::VectorXd initialConditions(3);
-  initialConditions << knotPositions.front(), initialVelocity, initialAcceleration;
+  Eigen::Vector3d initialConditions(knotPositions.front(), initialVelocity, initialAcceleration);
   addInitialConditions(initialConditions, constraintIdx);
 
   // Final conditions.
-  Eigen::VectorXd finalConditions(3);
-  finalConditions << knotPositions.back(), finalVelocity, finalAcceleration;
+  Eigen::Vector3d finalConditions(knotPositions.back(), finalVelocity, finalAcceleration);
   addFinalConditions(finalConditions, constraintIdx, splineDurations.back(), num_junctions);
 
   // Junction conditions.
@@ -284,10 +284,10 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   }
 
   // Find spline coefficients.
-  Eigen::VectorXd coeffs = equalityConstraintJacobian_.colPivHouseholderQr().solve(equalityConstraintTargetValues_);
+  splineCoefficients_ = equalityConstraintJacobian_.colPivHouseholderQr().solve(equalityConstraintTargetValues_);
 
   // Extract spline coefficients and add splines.
-  success &= extractSplineCoefficients(coeffs, splineDurations, numSplines);
+  success &= extractSplineCoefficients(splineCoefficients_, splineDurations, numSplines);
 
   return success;
 }
@@ -295,6 +295,7 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
 template <int splineOrder_>
 bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions,
                                                       double initialVelocity, double finalVelocity) {
+  checkNumKnotsValid(knotDurations, knotPositions);
   bool success = reset();
 
   // Set up optimization parameters.
@@ -341,13 +342,11 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   unsigned int constraintIdx = 0;
 
   // Initial conditions.
-  Eigen::VectorXd initialConditions(2);
-  initialConditions << knotPositions.front(), initialVelocity;
+  Eigen::Vector2d initialConditions(knotPositions.front(), initialVelocity);
   addInitialConditions(initialConditions, constraintIdx);
 
   // Final conditions.
-  Eigen::VectorXd finalConditions(2);
-  finalConditions << knotPositions.back(), finalVelocity;
+  Eigen::Vector2d finalConditions(knotPositions.back(), finalVelocity);
   addFinalConditions(finalConditions, constraintIdx, splineDurations.back(), num_junctions);
 
   // Junction conditions.
@@ -359,17 +358,19 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   }
 
   // Find spline coefficients.
-  Eigen::VectorXd coeffs = equalityConstraintJacobian_.colPivHouseholderQr().solve(equalityConstraintTargetValues_);
+  splineCoefficients_ = equalityConstraintJacobian_.colPivHouseholderQr().solve(equalityConstraintTargetValues_);
 
   // Extract spline coefficients and add splines.
-  success &= extractSplineCoefficients(coeffs, splineDurations, numSplines);
+  success &= extractSplineCoefficients(splineCoefficients_, splineDurations, numSplines);
 
   return success;
 }
 
 template <int splineOrder_>
 bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions) {
+  checkNumKnotsValid(knotDurations, knotPositions);
   bool success = true;
+
   const auto numSplines = knotDurations.size() - 1;
   constexpr auto num_coeffs_spline = SplineType::coefficientCount;
   typename SplineType::SplineCoefficients coefficients;
@@ -381,8 +382,6 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   std::fill(coefficients.begin(), coefficients.end(), 0.0);
 
   success &= reset();
-
-  this->reserveSplines(numSplines);
 
   for (std::size_t splineId = 0; splineId < numSplines; ++splineId) {
     const double duration = knotDurations[splineId + 1] - knotDurations[splineId];
@@ -400,10 +399,11 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
 }
 
 template <int splineOrder_>
-void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::VectorXd& initialConditions, unsigned int& constraintIdx) {
+void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::Ref<const Eigen::VectorXd>& initialConditions,
+                                                                   unsigned int& constraintIdx) {
   // Initial position.
   if (initialConditions.size() > 0) {
-    equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
         SplineType::getTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = initialConditions(0);
     ++constraintIdx;
@@ -411,7 +411,7 @@ void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::
 
   // Initial velocity.
   if (initialConditions.size() > 1) {
-    equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
         SplineType::getDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = initialConditions(1);
     ++constraintIdx;
@@ -419,7 +419,7 @@ void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::
 
   // Initial acceleration.
   if (initialConditions.size() > 2) {
-    equalityConstraintJacobian_.block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(0)) =
         SplineType::getDDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = initialConditions(2);
     ++constraintIdx;
@@ -427,11 +427,12 @@ void PolynomialSplineContainer<splineOrder_>::addInitialConditions(const Eigen::
 }
 
 template <int splineOrder_>
-void PolynomialSplineContainer<splineOrder_>::addFinalConditions(const Eigen::VectorXd& finalConditions, unsigned int& constraintIdx,
-                                                                 const double lastSplineDuration, unsigned int lastSplineId) {
+void PolynomialSplineContainer<splineOrder_>::addFinalConditions(const Eigen::Ref<const Eigen::VectorXd>& finalConditions,
+                                                                 unsigned int& constraintIdx, const double lastSplineDuration,
+                                                                 unsigned int lastSplineId) {
   // Initial position.
   if (finalConditions.size() > 0) {
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(lastSplineId)) =
         SplineType::getTimeVector(lastSplineDuration);
     equalityConstraintTargetValues_(constraintIdx) = finalConditions(0);
     constraintIdx++;
@@ -439,7 +440,7 @@ void PolynomialSplineContainer<splineOrder_>::addFinalConditions(const Eigen::Ve
 
   // Initial velocity.
   if (finalConditions.size() > 1) {
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(lastSplineId)) =
         SplineType::getDTimeVector(lastSplineDuration);
     ;
     equalityConstraintTargetValues_(constraintIdx) = finalConditions(1);
@@ -448,7 +449,7 @@ void PolynomialSplineContainer<splineOrder_>::addFinalConditions(const Eigen::Ve
 
   // Initial acceleration.
   if (finalConditions.size() > 2) {
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(lastSplineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(lastSplineId)) =
         SplineType::getDDTimeVector(lastSplineDuration);
     ;
     equalityConstraintTargetValues_(constraintIdx) = finalConditions(2);
@@ -464,28 +465,28 @@ void PolynomialSplineContainer<splineOrder_>::addJunctionsConditions(const std::
     const unsigned int nextSplineId = splineId + 1;
 
     // Smooth position transition with fixed positions.
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(splineId)) =
         SplineType::getTimeVector(splineDurations[splineId]);
     equalityConstraintTargetValues_(constraintIdx) = knotPositions[nextSplineId];
     constraintIdx++;
 
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(nextSplineId)) =
         SplineType::getTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = knotPositions[nextSplineId];
     constraintIdx++;
 
     // Smooth velocity transition.
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(splineId)) =
         SplineType::getDTimeVector(splineDurations[splineId]);
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(nextSplineId)) =
         -SplineType::getDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = 0.0;
     constraintIdx++;
 
     // Smooth acceleration transition.
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(splineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(splineId)) =
         SplineType::getDDTimeVector(splineDurations[splineId]);
-    equalityConstraintJacobian_.block(constraintIdx, getSplineColumnIndex(nextSplineId), 1, SplineType::coefficientCount) =
+    equalityConstraintJacobian_.template block<1, SplineType::coefficientCount>(constraintIdx, getSplineColumnIndex(nextSplineId)) =
         -SplineType::getDDTimeVectorAtZero();
     equalityConstraintTargetValues_(constraintIdx) = 0.0;
     constraintIdx++;
@@ -493,12 +494,10 @@ void PolynomialSplineContainer<splineOrder_>::addJunctionsConditions(const std::
 }
 
 template <int splineOrder_>
-bool PolynomialSplineContainer<splineOrder_>::extractSplineCoefficients(const Eigen::VectorXd& coeffs,
+bool PolynomialSplineContainer<splineOrder_>::extractSplineCoefficients(const Eigen::Ref<const Eigen::VectorXd>& coeffs,
                                                                         const std::vector<double>& splineDurations,
                                                                         const unsigned int numSplines) {
   typename SplineType::SplineCoefficients coefficients;
-
-  this->reserveSplines(numSplines);
 
   for (unsigned int splineId = 0; splineId < numSplines; ++splineId) {
     Eigen::Map<Eigen::VectorXd>(coefficients.data(), SplineType::coefficientCount, 1) =
@@ -506,12 +505,6 @@ bool PolynomialSplineContainer<splineOrder_>::extractSplineCoefficients(const Ei
     this->addSpline(SplineType(coefficients, splineDurations[splineId]));
   }
 
-  return true;
-}
-
-template <int splineOrder_>
-bool PolynomialSplineContainer<splineOrder_>::reserveSplines(const unsigned int numSplines) {
-  splines_.reserve(numSplines);
   return true;
 }
 
@@ -553,6 +546,38 @@ bool PolynomialSplineContainer<splineOrder_>::checkContainer() const {
     }
   }
   return true;
+}
+
+template <int splineOrder_>
+constexpr int PolynomialSplineContainer<splineOrder_>::getMaxSolutionDimension() {
+  return (maxKnots_ - 1) * SplineType::coefficientCount;
+}
+
+template <int splineOrder_>
+constexpr int PolynomialSplineContainer<splineOrder_>::getMaxNumEqualityConstraints() {
+  /*
+   * max_num_junctions = maxKnots_ - 2
+   * max_constraints_per_junction = 4 (2x pos + vel + acc)
+   * max_num_junction_constraints = max_num_junctions * max_constraints_per_junction
+   *
+   * max_initial_constraints = 3 (pos + vel + acc)
+   * max_final_constraints = 3 (pos + vel + acc)
+   *
+   * max_num_constraints = max_initial_constraints + max_num_junction_constraints + max_final_constraints
+   *                     = 4 * maxKnots_ - 2 (on simplification)
+   */
+  return 4 * maxKnots_ - 2;
+}
+
+template <int splineOrder_>
+void PolynomialSplineContainer<splineOrder_>::checkNumKnotsValid(const std::vector<double>& knotDurations,
+                                                                 const std::vector<double>& knotPositions) const {
+  if (knotDurations.size() != knotPositions.size()) {
+    throw std::invalid_argument("Number of knots in duration and position vectors do not match.");
+  }
+  if (knotDurations.size() > maxKnots_) {
+    throw std::invalid_argument("Number of knots has to be less than or equal to " + std::to_string(maxKnots_) + ".");
+  }
 }
 
 }  // namespace curves

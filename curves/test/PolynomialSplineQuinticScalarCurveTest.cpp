@@ -160,3 +160,23 @@ TEST(PolynomialSplineQuinticScalarCurveTest, invarianceUnderOffset) {
     testTime += 0.01;
   }
 }
+
+TEST(PolynomialSplineQuinticScalarCurveTest, tooManyKnots) {
+  constexpr int numKnots = 100;
+  std::vector<curves::Time> times(numKnots);
+  std::iota(times.begin(), times.end(), 1.0);
+  std::vector<ValueType> values(numKnots);
+  std::iota(values.begin(), values.end(), 1.0);
+
+  PolynomialSplineQuinticScalarCurve curve;
+  EXPECT_THROW(curve.fitCurve(times, values, nullptr), std::invalid_argument);
+}
+
+TEST(PolynomialSplineQuinticScalarCurveTest, tooManySplines) {
+  constexpr int numSplines = 100;
+  curves::SplineOptions spline(0., 0., 0., 0., 0., 0., 0.);
+  std::vector<curves::SplineOptions> splines(numSplines, spline);
+
+  PolynomialSplineQuinticScalarCurve curve;
+  EXPECT_THROW(curve.fitCurve(splines, nullptr), std::invalid_argument);
+}

@@ -97,7 +97,11 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
   }
 
   virtual void fitCurve(const std::vector<SplineOptions>& optionList, std::vector<Key>* /*outKeys*/) {
-    container_.reserveSplines(optionList.size());
+    if (optionList.size() > container_.getMaxNumSplines()) {
+      throw std::invalid_argument("Number of splines has to be less than or equal to" + std::to_string(container_.getMaxNumSplines()) +
+                                  ".");
+    }
+
     for (const auto& options : optionList) {
       container_.addSpline(PolynomialSplineQuintic(options));
     }

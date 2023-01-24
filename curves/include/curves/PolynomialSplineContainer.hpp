@@ -28,6 +28,9 @@ class PolynomialSplineContainer {
   using SplineType = PolynomialSpline<splineOrder_>;
   using SplineList = std::vector<SplineType>;
 
+  //! Maximum number of knots; required to pre-allocate memory needed for computations.
+  static constexpr int maxKnots_ = 10;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   PolynomialSplineContainer();
@@ -58,9 +61,6 @@ class PolynomialSplineContainer {
     splines_.emplace_back(std::forward<SplineType_>(spline));
     return true;
   }
-
-  //! Reserve memory for the spline container.
-  bool reserveSplines(unsigned int numSplines);
 
   //! Clear spline container.
   bool reset();
@@ -136,6 +136,12 @@ class PolynomialSplineContainer {
 
   bool checkContainer() const;
 
+  //! Get the maximum number of splines allowed in a container.
+  static constexpr int getMaxNumSplines() { return maxKnots_ - 1; }
+
+  //! Get the maximum number of knots allowed in a container.
+  static constexpr int getMaxNumKnots() { return maxKnots_; }
+
  protected:
   /*!
    * aijh:
@@ -150,17 +156,27 @@ class PolynomialSplineContainer {
 
   inline int getSplineColumnIndex(const int splineIdx) const { return getCoeffIndex(splineIdx, 0); }
 
-  void addInitialConditions(const Eigen::VectorXd& initialConditions, unsigned int& constraintIdx);
+  void addInitialConditions(const Eigen::Ref<const Eigen::VectorXd>& initialConditions, unsigned int& constraintIdx);
 
-  void addFinalConditions(const Eigen::VectorXd& finalConditions, unsigned int& constraintIdx, double lastSplineDuration,
+  void addFinalConditions(const Eigen::Ref<const Eigen::VectorXd>& finalConditions, unsigned int& constraintIdx, double lastSplineDuration,
                           unsigned int lastSplineId);
 
   void addJunctionsConditions(const std::vector<double>& splineDurations, const std::vector<double>& knotPositions,
                               unsigned int& constraintIdx, unsigned int num_junctions);
 
-  bool extractSplineCoefficients(const Eigen::VectorXd& coeffs, const std::vector<double>& splineDurations, unsigned int numSplines);
+  bool extractSplineCoefficients(const Eigen::Ref<const Eigen::VectorXd>& coeffs, const std::vector<double>& splineDurations,
+                                 unsigned int numSplines);
 
  private:
+  //! Returns the maximum dimension of the solution of the quadratic program in compile time.
+  static inline constexpr int getMaxSolutionDimension();
+
+  //! Returns the maximum number of constraints for the quadratic program in compile time.
+  static inline constexpr int getMaxNumEqualityConstraints();
+
+  //! @throws invalid_argument if the number of knots provided are valid.
+  void checkNumKnotsValid(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions) const;
+
   //! Conjunction of smoothly interconnected splines.
   SplineList splines_;
 
@@ -177,10 +193,14 @@ class PolynomialSplineContainer {
   int activeSplineIdx_;
 
   //! Equality matrix of quadratic program (A in Ax=b).
-  Eigen::MatrixXd equalityConstraintJacobian_;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, 0, getMaxNumEqualityConstraints(), getMaxSolutionDimension()>
+      equalityConstraintJacobian_;
 
-  //! Equality target values of quatratic program (b in Ax=b).
-  Eigen::VectorXd equalityConstraintTargetValues_;
+  //! Equality target values of quadratic program (b in Ax=b).
+  Eigen::Matrix<double, Eigen::Dynamic, 1, 0, getMaxNumEqualityConstraints(), 1> equalityConstraintTargetValues_;
+
+  //! Solution to the quadratic program (x in Ax=b).
+  Eigen::Matrix<double, Eigen::Dynamic, 1, 0, getMaxSolutionDimension(), 1> splineCoefficients_;
 };
 
 }  // namespace curves
