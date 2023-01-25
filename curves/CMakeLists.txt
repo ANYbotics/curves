@@ -30,6 +30,10 @@ pkg_check_modules(glog libglog REQUIRED)
 # Add Doxygen documentation
 add_subdirectory(doc/doxygen)
 
+set(CATKIN_PACKAGE_HEADER_DEPENDENCIES
+  std_utils
+)
+
 catkin_package(
   INCLUDE_DIRS
     include
@@ -37,6 +41,7 @@ catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
   CATKIN_DEPENDS
+    ${CATKIN_PACKAGE_HEADER_DEPENDENCIES}
   DEPENDS
     Boost
     glog

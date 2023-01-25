@@ -9,15 +9,17 @@ namespace curves {
 
 template <int splineOrder_>
 PolynomialSplineContainer<splineOrder_>::PolynomialSplineContainer()
-    : timeOffset_(0.0),
+    : splines_(),
+      timeOffset_(0.0),
       containerTime_(0.0),
       containerDuration_(0.0),
       activeSplineIdx_(0),
       equalityConstraintJacobian_(),
-      equalityConstraintTargetValues_() {
+      equalityConstraintTargetValues_(),
+      splineCoefficients_(),
+      splineDurations_() {
   // Make sure that the container is correctly emptied.
   reset();
-  splines_.reserve(maxKnots_ - 1);
 }
 
 template <int splineOrder_>
@@ -251,12 +253,12 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   }
 
   // Vector containing durations of splines.
-  std::vector<double> splineDurations(numSplines);
+  splineDurations_.resize(numSplines);
   for (unsigned int splineId = 0; splineId < numSplines; splineId++) {
-    splineDurations[splineId] = knotDurations[splineId + 1] - knotDurations[splineId];
+    splineDurations_[splineId] = knotDurations[splineId + 1] - knotDurations[splineId];
 
-    if (splineDurations[splineId] <= 0.0) {
-      std::cout << "[PolynomialSplineContainer::setData] Invalid spline duration at index" << splineId << ": " << splineDurations[splineId]
+    if (splineDurations_[splineId] <= 0.0) {
+      std::cout << "[PolynomialSplineContainer::setData] Invalid spline duration at index" << splineId << ": " << splineDurations_[splineId]
                 << std::endl;
       return false;
     }
@@ -273,10 +275,10 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
 
   // Final conditions.
   Eigen::Vector3d finalConditions(knotPositions.back(), finalVelocity, finalAcceleration);
-  addFinalConditions(finalConditions, constraintIdx, splineDurations.back(), num_junctions);
+  addFinalConditions(finalConditions, constraintIdx, splineDurations_.back(), num_junctions);
 
   // Junction conditions.
-  addJunctionsConditions(splineDurations, knotPositions, constraintIdx, num_junctions);
+  addJunctionsConditions(splineDurations_, knotPositions, constraintIdx, num_junctions);
 
   if (num_constraints != constraintIdx) {
     std::cout << "[PolynomialSplineContainer::setData] Wrong number of equality constraints!" << std::endl;
@@ -287,7 +289,7 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   splineCoefficients_ = equalityConstraintJacobian_.colPivHouseholderQr().solve(equalityConstraintTargetValues_);
 
   // Extract spline coefficients and add splines.
-  success &= extractSplineCoefficients(splineCoefficients_, splineDurations, numSplines);
+  success &= extractSplineCoefficients(splineCoefficients_, splineDurations_, numSplines);
 
   return success;
 }
@@ -325,12 +327,12 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   }
 
   // Vector containing durations of splines.
-  std::vector<double> splineDurations(numSplines);
+  splineDurations_.resize(numSplines);
   for (unsigned int splineId = 0; splineId < numSplines; splineId++) {
-    splineDurations[splineId] = knotDurations[splineId + 1] - knotDurations[splineId];
+    splineDurations_[splineId] = knotDurations[splineId + 1] - knotDurations[splineId];
 
-    if (splineDurations[splineId] <= 0.0) {
-      std::cout << "[PolynomialSplineContainer::setData] Invalid spline duration at index" << splineId << ": " << splineDurations[splineId]
+    if (splineDurations_[splineId] <= 0.0) {
+      std::cout << "[PolynomialSplineContainer::setData] Invalid spline duration at index" << splineId << ": " << splineDurations_[splineId]
                 << std::endl;
       return false;
     }
@@ -347,10 +349,10 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
 
   // Final conditions.
   Eigen::Vector2d finalConditions(knotPositions.back(), finalVelocity);
-  addFinalConditions(finalConditions, constraintIdx, splineDurations.back(), num_junctions);
+  addFinalConditions(finalConditions, constraintIdx, splineDurations_.back(), num_junctions);
 
   // Junction conditions.
-  addJunctionsConditions(splineDurations, knotPositions, constraintIdx, num_junctions);
+  addJunctionsConditions(splineDurations_, knotPositions, constraintIdx, num_junctions);
 
   if (num_constraints != constraintIdx) {
     std::cout << "[PolynomialSplineContainer::setData] Wrong number of equality constraints!" << std::endl;
@@ -361,7 +363,7 @@ bool PolynomialSplineContainer<splineOrder_>::setData(const std::vector<double>&
   splineCoefficients_ = equalityConstraintJacobian_.colPivHouseholderQr().solve(equalityConstraintTargetValues_);
 
   // Extract spline coefficients and add splines.
-  success &= extractSplineCoefficients(splineCoefficients_, splineDurations, numSplines);
+  success &= extractSplineCoefficients(splineCoefficients_, splineDurations_, numSplines);
 
   return success;
 }
@@ -458,7 +460,7 @@ void PolynomialSplineContainer<splineOrder_>::addFinalConditions(const Eigen::Re
 }
 
 template <int splineOrder_>
-void PolynomialSplineContainer<splineOrder_>::addJunctionsConditions(const std::vector<double>& splineDurations,
+void PolynomialSplineContainer<splineOrder_>::addJunctionsConditions(const SplineDurations& splineDurations,
                                                                      const std::vector<double>& knotPositions, unsigned int& constraintIdx,
                                                                      unsigned int num_junctions) {
   for (unsigned int splineId = 0; splineId < num_junctions; splineId++) {
@@ -495,7 +497,7 @@ void PolynomialSplineContainer<splineOrder_>::addJunctionsConditions(const std::
 
 template <int splineOrder_>
 bool PolynomialSplineContainer<splineOrder_>::extractSplineCoefficients(const Eigen::Ref<const Eigen::VectorXd>& coeffs,
-                                                                        const std::vector<double>& splineDurations,
+                                                                        const SplineDurations& splineDurations,
                                                                         const unsigned int numSplines) {
   typename SplineType::SplineCoefficients coefficients;
 

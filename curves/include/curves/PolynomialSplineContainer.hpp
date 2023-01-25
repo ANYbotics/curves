@@ -20,27 +20,23 @@
 // boost
 #include <boost/math/special_functions/pow.hpp>
 
+// std_utils
+#include <std_utils/containers/VectorMaxSize.hpp>
+
 namespace curves {
 
 template <int splineOrder_>
 class PolynomialSplineContainer {
  public:
-  using SplineType = PolynomialSpline<splineOrder_>;
-  using SplineList = std::vector<SplineType>;
-
-  //! Maximum number of knots; required to pre-allocate memory needed for computations.
   static constexpr int maxKnots_ = 10;
+
+  using SplineType = PolynomialSpline<splineOrder_>;
+  using SplineList = std_utils::VectorMaxSize<SplineType, maxKnots_ - 1>;
+  using SplineDurations = std_utils::VectorMaxSize<double, maxKnots_ - 1>;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   PolynomialSplineContainer();
-  PolynomialSplineContainer(const PolynomialSplineContainer&) = default;
-  PolynomialSplineContainer(PolynomialSplineContainer&&) = default;
-
-  virtual ~PolynomialSplineContainer() = default;
-
-  PolynomialSplineContainer& operator=(const PolynomialSplineContainer<splineOrder_>&) = default;
-  PolynomialSplineContainer& operator=(PolynomialSplineContainer<splineOrder_>&&) = default;
 
   //! Get a pointer to the spline with a given index.
   SplineType* getSpline(int splineIndex);
@@ -58,7 +54,7 @@ class PolynomialSplineContainer {
   template <typename SplineType_>
   bool addSpline(SplineType_&& spline) {
     containerDuration_ += spline.getSplineDuration();
-    splines_.emplace_back(std::forward<SplineType_>(spline));
+    splines_.push_back(std::forward<SplineType_>(spline));
     return true;
   }
 
@@ -161,10 +157,10 @@ class PolynomialSplineContainer {
   void addFinalConditions(const Eigen::Ref<const Eigen::VectorXd>& finalConditions, unsigned int& constraintIdx, double lastSplineDuration,
                           unsigned int lastSplineId);
 
-  void addJunctionsConditions(const std::vector<double>& splineDurations, const std::vector<double>& knotPositions,
-                              unsigned int& constraintIdx, unsigned int num_junctions);
+  void addJunctionsConditions(const SplineDurations& splineDurations, const std::vector<double>& knotPositions, unsigned int& constraintIdx,
+                              unsigned int num_junctions);
 
-  bool extractSplineCoefficients(const Eigen::Ref<const Eigen::VectorXd>& coeffs, const std::vector<double>& splineDurations,
+  bool extractSplineCoefficients(const Eigen::Ref<const Eigen::VectorXd>& coeffs, const SplineDurations& splineDurations,
                                  unsigned int numSplines);
 
  private:
@@ -201,6 +197,9 @@ class PolynomialSplineContainer {
 
   //! Solution to the quadratic program (x in Ax=b).
   Eigen::Matrix<double, Eigen::Dynamic, 1, 0, getMaxSolutionDimension(), 1> splineCoefficients_;
+
+  //! Container for all spline durations.
+  SplineDurations splineDurations_;
 };
 
 }  // namespace curves

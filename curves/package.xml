@@ -26,6 +26,7 @@
 
   <depend>kindr</depend>
   <depend>boost</depend>
+  <depend>std_utils</depend>
   <depend>libgoogle-glog-dev</depend>
 
   <build_export_depend>eigen</build_export_depend>
