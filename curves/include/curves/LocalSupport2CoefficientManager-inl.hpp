@@ -6,12 +6,12 @@
  *   Institute: ETH Zurich, Autonomous Systems Lab
  */
 
-#include <curves/LocalSupport2CoefficientManager.hpp>
-
-#include <glog/logging.h>
-#include <curves/KeyGenerator.hpp>
-#include <curves/LocalSupport2CoefficientManager.hpp>
 #include <iostream>
+
+#include <message_logger/message_logger.hpp>
+
+#include "curves/KeyGenerator.hpp"
+#include "curves/LocalSupport2CoefficientManager.hpp"
 
 namespace curves {
 
@@ -49,14 +49,14 @@ bool LocalSupport2CoefficientManager<Coefficient>::equals(const LocalSupport2Coe
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::getKeys(std::vector<Key>* outKeys) const {
-  CHECK_NOTNULL(outKeys);
+  assert(outKeys != nullptr);
   outKeys->clear();
   appendKeys(outKeys);
 }
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::appendKeys(std::vector<Key>* outKeys) const {
-  CHECK_NOTNULL(outKeys);
+  assert(outKeys != nullptr);
   outKeys->reserve(outKeys->size() + keyToCoefficient_.size());
   CoefficientIter it;
   it = timeToCoefficient_.begin();
@@ -67,7 +67,7 @@ void LocalSupport2CoefficientManager<Coefficient>::appendKeys(std::vector<Key>* 
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::getTimes(std::vector<Time>* outTimes) const {
-  CHECK_NOTNULL(outTimes);
+  assert(outTimes != nullptr);
   outTimes->clear();
   outTimes->reserve(timeToCoefficient_.size());
   auto it = timeToCoefficient_.begin();
@@ -78,9 +78,9 @@ void LocalSupport2CoefficientManager<Coefficient>::getTimes(std::vector<Time>* o
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::getTimesInWindow(std::vector<Time>* outTimes, Time begTime, Time endTime) const {
-  CHECK_EQ(endTime, getMaxTime()) << "Not implemented for window not at the end.";
-  CHECK(begTime >= getMinTime()) << "Asked for times outside the curve.";
-  CHECK_NOTNULL(outTimes);
+  assert(endTime == getMaxTime() && "Not implemented for window not at the end.");
+  assert(begTime >= getMinTime() && "Asked for times outside the curve.");
+  assert(outTimes != nullptr);
 
   outTimes->clear();
   CoefficientIter it = --(timeToCoefficient_.end());
@@ -121,7 +121,7 @@ Key LocalSupport2CoefficientManager<Coefficient>::insertCoefficient(Time time, c
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::insertCoefficients(const std::vector<Time>& times,
                                                                       const std::vector<Coefficient>& values, std::vector<Key>* outKeys) {
-  CHECK_EQ(times.size(), values.size());
+  assert(times.size() == values.size());
   for (Key i = 0; i < times.size(); ++i) {
     if (outKeys != nullptr) {
       outKeys->push_back(insertCoefficient(times[i], values[i]));
@@ -134,7 +134,7 @@ void LocalSupport2CoefficientManager<Coefficient>::insertCoefficients(const std:
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::modifyCoefficientsValuesInBatch(const std::vector<Time>& times,
                                                                                    const std::vector<Coefficient>& values) {
-  CHECK_EQ(times.size(), values.size());
+  assert(times.size() == values.size());
   // Get an iterator to the first coefficient
   typename TimeToKeyCoefficientMap::iterator it = timeToCoefficient_.end();
 
@@ -143,7 +143,7 @@ void LocalSupport2CoefficientManager<Coefficient>::modifyCoefficientsValuesInBat
   } while (it->first != times[0]);
 
   for (size_t i = 0; i < times.size(); ++i) {
-    CHECK_EQ(it->first, times[i]);
+    assert(it->first == times[i]);
     it->second.coefficient_ = values[i];
     ++it;
   }
@@ -152,7 +152,7 @@ void LocalSupport2CoefficientManager<Coefficient>::modifyCoefficientsValuesInBat
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::addCoefficientAtEnd(Time time, const Coefficient& coefficient,
                                                                        std::vector<Key>* outKeys) {
-  CHECK(time > getMaxTime()) << "Time to add is not greater than curve max time";
+  assert(time > getMaxTime() && "Time to add is not greater than curve max time.");
 
   Key key = KeyGenerator::getNextKey();
 
@@ -179,7 +179,7 @@ void LocalSupport2CoefficientManager<Coefficient>::modifyCoefficient(typename Ti
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::removeCoefficientWithKey(Key key) {
-  CHECK(hasCoefficientWithKey(key)) << "No coefficient with that key.";
+  assert(hasCoefficientWithKey(key) && "No coefficient with that key.");
   typename TimeToKeyCoefficientMap::iterator it1;
   typename boost::unordered_map<Key, CoefficientIter>::iterator it2;
   it2 = keyToCoefficient_.find(key);
@@ -190,7 +190,7 @@ void LocalSupport2CoefficientManager<Coefficient>::removeCoefficientWithKey(Key 
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::removeCoefficientAtTime(Time time) {
-  CHECK(this->hasCoefficientAtTime(time)) << "No coefficient at that time.";
+  assert(this->hasCoefficientAtTime(time) && "No coefficient at that time.");
   auto it1 = timeToCoefficient_.find(time);
   auto it2 = keyToCoefficient_.find(it1->second.key_);
   timeToCoefficient_.erase(it1);
@@ -218,7 +218,7 @@ bool LocalSupport2CoefficientManager<Coefficient>::hasCoefficientWithKey(Key key
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::updateCoefficientByKey(Key key, const Coefficient& coefficient) {
   auto it = keyToCoefficient_.find(key);
-  CHECK(it != keyToCoefficient_.end()) << "Key " << key << " is not in the container.";
+  assert(it != keyToCoefficient_.end() && "Key is not in the container.");
   it->second->second.coefficient_ = coefficient;
 }
 
@@ -226,13 +226,13 @@ void LocalSupport2CoefficientManager<Coefficient>::updateCoefficientByKey(Key ke
 template <class Coefficient>
 Coefficient LocalSupport2CoefficientManager<Coefficient>::getCoefficientByKey(Key key) const {
   auto it = keyToCoefficient_.find(key);
-  CHECK(it != keyToCoefficient_.end()) << "Key " << key << " is not in the container.";
+  assert(it != keyToCoefficient_.end() && "Key is not in the container.");
   return it->second->second.coefficient_;
 }
 template <class Coefficient>
 Time LocalSupport2CoefficientManager<Coefficient>::getCoefficientTimeByKey(Key key) const {
   auto it = keyToCoefficient_.find(key);
-  CHECK(it != keyToCoefficient_.end()) << "Key " << key << " is not in the container.";
+  assert(it != keyToCoefficient_.end() && "Key is not in the container.");
   return it->second->first;
 }
 
@@ -240,15 +240,15 @@ Time LocalSupport2CoefficientManager<Coefficient>::getCoefficientTimeByKey(Key k
 template <class Coefficient>
 bool LocalSupport2CoefficientManager<Coefficient>::getCoefficientsAt(Time time, CoefficientIter* outCoefficient0,
                                                                      CoefficientIter* outCoefficient1) const {
-  CHECK_NOTNULL(outCoefficient0);
-  CHECK_NOTNULL(outCoefficient1);
+  assert(outCoefficient0 != nullptr);
+  assert(outCoefficient1 != nullptr);
   if (timeToCoefficient_.empty()) {
-    LOG(INFO) << "No coefficients";
+    MELO_INFO_STREAM("No coefficients");
     return false;
   }
 
   if (time < getMinTime() || time > getMaxTime()) {
-    LOG(INFO) << "time, " << time << ", is out of bounds: [" << getMinTime() << ", " << getMaxTime() << "]";
+    MELO_INFO_STREAM("time, " << time << ", is out of bounds: [" << getMinTime() << ", " << getMaxTime() << "]");
     return false;
   }
 
@@ -297,7 +297,7 @@ void LocalSupport2CoefficientManager<Coefficient>::getCoefficientsInRange(Time s
 /// \brief Get all of the curve's coefficients.
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::getCoefficients(CoefficientMap* outCoefficients) const {
-  CHECK_NOTNULL(outCoefficients);
+  assert(outCoefficients != nullptr);
   CoefficientIter it;
   it = timeToCoefficient_.begin();
   for (; it != timeToCoefficient_.end(); ++it) {
@@ -353,12 +353,12 @@ Time LocalSupport2CoefficientManager<Coefficient>::getMaxTime() const {
 
 template <class Coefficient>
 void LocalSupport2CoefficientManager<Coefficient>::checkInternalConsistency(bool doExit) const {
-  CHECK_EQ(keyToCoefficient_.size(), timeToCoefficient_.size());
+  assert(keyToCoefficient_.size() == timeToCoefficient_.size());
   for (auto it = timeToCoefficient_.begin(); it != timeToCoefficient_.end(); ++it) {
     Key key = it->second.key_;
     auto itc = keyToCoefficient_.find(key);
-    CHECK_EQ(itc->first, itc->second->second.key_);
-    CHECK(itc != keyToCoefficient_.end()) << "Key " << key << " is not in the map";
+    assert(itc->first == itc->second->second.key_);
+    assert(itc != keyToCoefficient_.end() && "Key is not in the map");
     // This is probably the important one.
     // Check that the itc->second iterator
     // points to the same object as it->second.
@@ -367,7 +367,7 @@ void LocalSupport2CoefficientManager<Coefficient>::checkInternalConsistency(bool
     // pointers never get reallocated.
     // todo the implementation differs from the comment above. Here only the
     // equality between coefficients is checked
-    CHECK_EQ(itc->second->second.coefficient_, it->second.coefficient_);
+    assert(itc->second->second.coefficient_ == it->second.coefficient_);
   }
   if (doExit) {
     exit(0);

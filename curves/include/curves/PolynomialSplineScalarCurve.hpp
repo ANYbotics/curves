@@ -8,14 +8,9 @@
 
 #pragma once
 
-// stl
 #include <string>
 #include <vector>
 
-// glog
-#include <glog/logging.h>
-
-// curves
 #include "curves/Curve.hpp"
 #include "curves/PolynomialSplineContainer.hpp"
 #include "curves/ScalarCurveConfig.hpp"
@@ -97,7 +92,7 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
   }
 
   virtual void fitCurve(const std::vector<SplineOptions>& optionList, std::vector<Key>* /*outKeys*/) {
-    if (optionList.size() > container_.getMaxNumSplines()) {
+    if (optionList.size() > static_cast<std::size_t>(container_.getMaxNumSplines())) {
       throw std::invalid_argument("Number of splines has to be less than or equal to" + std::to_string(container_.getMaxNumSplines()) +
                                   ".");
     }
@@ -113,7 +108,7 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     minTime_ = 0.0;
   }
 
-  void transformCurve(const ValueType /*T*/) override { CHECK(false) << "Not implemented"; }
+  void transformCurve(const ValueType /*T*/) override { assert(false && "Not implemented"); }
 
  private:
   SplineContainerType container_;

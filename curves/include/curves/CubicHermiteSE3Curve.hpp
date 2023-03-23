@@ -332,8 +332,7 @@ inline void SamplingPolicy::extend<CubicHermiteSE3Curve, ValueType>(const std::v
                                                                     CubicHermiteSE3Curve* curve, std::vector<Key>* /*outKeys*/) {
   for (std::size_t i = 0; i < times.size(); ++i) {
     // ensure time strictly increases
-    CHECK((times[i] > curve->manager_.getMaxTime()) || curve->manager_.empty())
-        << "curve can only be extended into the future. Requested = " << times[i] << " < curve max time = " << curve->manager_.getMaxTime();
+    assert(((times[i] > curve->manager_.getMaxTime()) || curve->manager_.empty()) && "Curve can only be extended into the future.");
     if (curve->manager_.empty()) {
       defaultExtend(times[i], values[i], curve);
     } else if ((measurementsSinceLastExtend_ >= minimumMeasurements_ && lastExtend_ + minSamplingPeriod_ < times[i])) {

@@ -24,10 +24,10 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>kindr</depend>
   <depend>boost</depend>
+  <depend>kindr</depend>
+  <depend>message_logger</depend>
   <depend>std_utils</depend>
-  <depend>libgoogle-glog-dev</depend>
 
   <build_export_depend>eigen</build_export_depend>
 

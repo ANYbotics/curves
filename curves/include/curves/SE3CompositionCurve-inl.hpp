@@ -113,8 +113,8 @@ void SE3CompositionCurve<C1, C2>::extend(const std::vector<Time>& times,
                                          const std::vector<typename SE3CompositionCurve<C1, C2>::ValueType>& values,
                                          std::vector<Key>* outKeys) {
   // todo: Treat case when times.size() != 1
-  CHECK_EQ(times.size(), 1) << "Extend was called with more than one time.";
-  CHECK_EQ(values.size(), 1) << "Extend was called with more than one value.";
+  assert(times.size() == 1 && "Extend was called with more than one time.");
+  assert(values.size() == 1 && "Extend was called with more than one value.");
 
   // Find the new limit times of the curve
   Time newMaxTime = 0;
@@ -205,8 +205,8 @@ void SE3CompositionCurve<C1, C2>::setCorrectionTimes(const std::vector<Time>& ti
   correctionCurve_.clear();
   correctionCurve_.extend(times, values);
 
-  CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
-  CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
+  assert(correctionCurve_.getMinTime() == baseCurve_.getMinTime() && "Min time of correction curve and base curve are different");
+  assert(correctionCurve_.getMaxTime() == baseCurve_.getMaxTime() && "Min time of correction curve and base curve are different");
 }
 
 template <class C1, class C2>
@@ -269,12 +269,12 @@ void SE3CompositionCurve<C1, C2>::clear() {
 
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::removeCorrectionCoefficientAtTime(Time time) {
-  CHECK(correctionCurve_.manager_.hasCoefficientAtTime(time));
+  assert(correctionCurve_.manager_.hasCoefficientAtTime(time));
   correctionCurve_.manager_.removeCoefficientAtTime(time);
 }
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::setCorrectionCoefficientAtTime(Time time, ValueType value) {
-  CHECK(correctionCurve_.manager_.hasCoefficientAtTime(time));
+  assert(correctionCurve_.manager_.hasCoefficientAtTime(time));
   correctionCurve_.manager_.insertCoefficient(time, value);
 }
 
@@ -295,30 +295,30 @@ void SE3CompositionCurve<C1, C2>::resetCorrectionCurve(const std::vector<Time>& 
   // Redefine the correction curve
   correctionCurve_.fitCurve(times, values, nullptr);
 
-  CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
-  CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
+  assert(correctionCurve_.getMinTime() == baseCurve_.getMinTime() && "Min time of correction curve and base curve are different");
+  assert(correctionCurve_.getMaxTime() == baseCurve_.getMaxTime() && "Min time of correction curve and base curve are different");
 }
 
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::setBaseCurve(const std::vector<Time>& times, const std::vector<ValueType>& values) {
   baseCurve_.fitCurve(times, values, nullptr);
-  CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
-  CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
+  assert(correctionCurve_.getMinTime() == baseCurve_.getMinTime() && "Min time of correction curve and base curve are different");
+  assert(correctionCurve_.getMaxTime() == baseCurve_.getMaxTime() && "Min time of correction curve and base curve are different");
 }
 
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::setBaseCurvePart(const std::vector<Time>& times, const std::vector<ValueType>& values) {
   baseCurve_.setCurve(times, values);
-  CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
-  CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
+  assert(correctionCurve_.getMinTime() == baseCurve_.getMinTime() && "Min time of correction curve and base curve are different");
+  assert(correctionCurve_.getMaxTime() == baseCurve_.getMaxTime() && "Min time of correction curve and base curve are different");
 }
 
 template <class C1, class C2>
 void SE3CompositionCurve<C1, C2>::modifyBaseCoefficientsValuesInBatch(const std::vector<Time>& times,
                                                                       const std::vector<ValueType>& values) {
   baseCurve_.manager_.modifyCoefficientsValuesInBatch(times, values);
-  CHECK_EQ(correctionCurve_.getMinTime(), baseCurve_.getMinTime()) << "Min time of correction curve and base curve are different";
-  CHECK_EQ(correctionCurve_.getMaxTime(), baseCurve_.getMaxTime()) << "Min time of correction curve and base curve are different";
+  assert(correctionCurve_.getMinTime() == baseCurve_.getMinTime() && "Min time of correction curve and base curve are different");
+  assert(correctionCurve_.getMaxTime() == baseCurve_.getMaxTime() && "Min time of correction curve and base curve are different");
 }
 
 template <class C1, class C2>

@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <glog/logging.h>
-#include <Eigen/Core>
 #include <string>
 #include <vector>
+
+#include <Eigen/Core>
 
 #include "curves/Curve.hpp"
 #include "curves/PolynomialSplineContainer.hpp"
@@ -117,7 +117,7 @@ class PolynomialSplineVectorSpaceCurve : public VectorSpaceCurve<N> {
     }
   }
 
-  void transformCurve(const ValueType /*T*/) override { CHECK(false) << "Not implemented"; }
+  void transformCurve(const ValueType /*T*/) override { assert(false && "Not implemented"); }
 
  private:
   std::vector<PolynomialSplineContainerQuintic> containers_;

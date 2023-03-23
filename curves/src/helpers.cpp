@@ -6,8 +6,6 @@
 
 #include <fstream>
 
-#include <glog/logging.h>
-
 #include <curves/helpers.hpp>
 
 namespace curves {
@@ -23,7 +21,7 @@ std::string toString(const T& t) {
 std::vector<std::vector<std::string> > loadCSV(std::string fileName) {
   // Open file stream and check that it is error free
   std::ifstream inFileStream(fileName.c_str());
-  CHECK(inFileStream.good()) << "error opening input file " << fileName;
+  assert(inFileStream.good() && "Error opening input file.");
   // Create output variable
   std::vector<std::vector<std::string> > strMatrix;
   // Loop over lines (rows) of CSV file
@@ -45,13 +43,13 @@ std::vector<std::vector<std::string> > loadCSV(std::string fileName) {
 
 /// \brief Helper function to write 'matrix' of strings into CSV file
 void writeCSV(std::string fileName, const std::vector<std::vector<std::string> >& strMatrix) {
-  CHECK_GE(strMatrix.size(), 1) << "Provided matrix of strings had no entries.";
+  assert(strMatrix.size() >= 1 && "Provided matrix of strings has no entries.");
   std::ofstream outFileStream;
   outFileStream.open(fileName.c_str());
   // Iterate over the rows of the string matrix and write comma-separated fields
   for (const auto& itRow : strMatrix) {
     const unsigned fields = itRow.size();
-    CHECK_GE(fields, 1) << "String matrix row has no entries.";
+    assert(fields >= 1 && "String matrix row has no entries.");
     outFileStream << itRow.at(0);
     for (unsigned i = 1; i < fields; i++) {
       outFileStream << "," << itRow.at(i);
@@ -64,14 +62,14 @@ void writeCSV(std::string fileName, const std::vector<std::vector<std::string> >
 /// \brief Helper function to read CSV files formatted in: time, vectorEntry0, vectorEntry1, ...
 void loadTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes, std::vector<Eigen::VectorXd>* outValues) {
   // Initialize outputs
-  CHECK_NOTNULL(outTimes);
+  assert(outTimes != nullptr);
   outTimes->clear();
-  CHECK_NOTNULL(outValues);
+  assert(outValues != nullptr);
   outValues->clear();
   // Load CSV to matrix of strings
   std::vector<std::vector<std::string> > temp = loadCSV(fileName);
-  CHECK_GE(temp.size(), 1) << "CSV " << fileName << "was empty.";
-  CHECK_GE(temp.at(0).size(), 2) << "CSV does not have the expected number of fields (atleast time and 1 value).";
+  assert(temp.size() >= 1 && "CSV file is empty.");
+  assert(temp.at(0).size() >= 2 && "CSV file does not have the expected number of fields (atleast time and 1 value).");
   // Iterate over the rows of the CSV and use comma-separated fields to popular outputs
   const unsigned vOffset = 1;
   const unsigned vDim = temp.at(0).size() - vOffset;
@@ -88,8 +86,8 @@ void loadTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes
 /// \brief Helper function to write CSV file formatted in: time, vectorEntry0, vectorEntry1, ...
 void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& times, const std::vector<Eigen::VectorXd>& values) {
   // Check inputs and initialize sizes
-  CHECK_EQ(times.size(), values.size()) << "Length of times and values is not equal.";
-  CHECK_GE(times.size(), 1) << "No entries to write";
+  assert(times.size() == values.size() && "Length of times and values is not equal.");
+  assert(times.size() == 1 && "No entries to write.");
   const unsigned vOffset = 1;
   const unsigned vDim = values.at(0).rows();
   // Fill string matrix
@@ -98,7 +96,7 @@ void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& t
   std::vector<std::string> strRow;
   strRow.reserve(vOffset + vDim);
   for (unsigned i = 0; i < times.size(); i++) {
-    CHECK_EQ(vDim, values.at(i).rows()) << "all vectors must be of the same dimension.";
+    assert(vDim == values.at(i).rows() && "all vectors must be of the same dimension.");
     strRow.clear();
     strRow.push_back(toString<Time>(times[i]));
     for (unsigned v = 0; v < vDim; v++) {
@@ -114,16 +112,16 @@ void writeTimeVectorCSV(std::string fileName, const std::vector<curves::Time>& t
 void loadTimeTimeVectorCSV(std::string fileName, std::vector<curves::Time>* outTimes0, std::vector<curves::Time>* outTimes1,
                            std::vector<Eigen::VectorXd>* outValues) {
   // Initialize outputs
-  CHECK_NOTNULL(outTimes0);
+  assert(outTimes0 != nullptr);
   outTimes0->clear();
-  CHECK_NOTNULL(outTimes1);
+  assert(outTimes1 != nullptr);
   outTimes1->clear();
-  CHECK_NOTNULL(outValues);
+  assert(outValues != nullptr);
   outValues->clear();
   // Load CSV to matrix of strings
   std::vector<std::vector<std::string> > temp = loadCSV(fileName);
-  CHECK_GE(temp.size(), 1) << "CSV " << fileName << "was empty.";
-  CHECK_GE(temp.at(0).size(), 3) << "CSV does not have the expected number of fields (atleast 2 times and 1 value).";
+  assert(temp.size() >= 1 && "CSV file is empty.");
+  assert(temp.at(0).size() >= 3 && "CSV does not have the expected number of fields (atleast 2 times and 1 value).");
   // Iterate over the rows of the CSV and use comma-separated fields to popular outputs
   const unsigned vOffset = 2;
   const unsigned vDim = temp.at(0).size() - vOffset;

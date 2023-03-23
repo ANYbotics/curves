@@ -110,7 +110,7 @@ void CubicHermiteSE3Curve::fitCurve(const std::vector<Time>& times, const std::v
 void CubicHermiteSE3Curve::fitCurveWithDerivatives(const std::vector<Time>& times, const std::vector<ValueType>& values,
                                                    const DerivativeType& initialDerivative, const DerivativeType& finalDerivative,
                                                    std::vector<Key>* outKeys) {
-  CHECK_EQ(times.size(), values.size());
+  assert(times.size() == values.size());
   clear();
 
   // construct the Hemrite coefficients
@@ -171,8 +171,6 @@ void CubicHermiteSE3Curve::extend(const std::vector<Time>& /*times*/, const std:
   // - default extend if curve is empty
   // - interpolation extend otherwise
 
-  //  CHECK_EQ(times.size(), values.size()) << "number of times and number of coefficients don't match";
-  //  hermitePolicy_.extend<CubicHermiteSE3Curve, ValueType>(times, values, this, outKeys);
   throw std::runtime_error("CubicHermiteSE3Curve::extend is not implemented!");
 }
 
@@ -393,146 +391,72 @@ bool CubicHermiteSE3Curve::evaluateLinearAcceleration(kindr::Acceleration3D& lin
   return true;
 }
 
-/// \brief forms cubic Hermite interpolation into a binary expression with 2 leafs and binds alpha into it,
-///        uses break down of expression into its operations
-// gtsam::Expression<typename CubicHermiteSE3Curve::ValueType>
-// CubicHermiteSE3Curve::getValueExpression(const Time& time) const {
-//
-//  using namespace gtsam;
-//
-//  // CoefficientType is HermiteTransformation
-//  CoefficientIter rval0, rval1;
-//  bool success = manager_.getCoefficientsAt(time, &rval0, &rval1);
-//  CHECK(success) << "Unable to get the coefficients at time " << time;
-//
-//  // shall return the Transformation Expression for Hermite
-//  EHermiteTransformation leaf1(rval0->second.key);
-//  EHermiteTransformation leaf2(rval1->second.key);
-//
-//  double dt_sec = (rval1->first - rval0->first) * 1e-9;
-//  double alpha = double(time - rval0->first)/(rval1->first - rval0->first);
-//
-//  // construct the necessary Expressions (and underlying Jacobians) for evaluation
-//  ETransformation transformation1 = kindr::minimal::transformationFromHermiteTransformation(leaf1);
-//  EVector3 angVel1 = kindr::minimal::angularVelocitiesFromHermiteTransformation(leaf1);
-//  EVector3 vel1 = kindr::minimal::velocitiesFromHermiteTransformation(leaf1);
-//  EQuaternion quat1 = kindr::minimal::rotationFromTransformation(transformation1);
-//  EVector3 trans1 = kindr::minimal::translationFromTransformation(transformation1);
-//
-//  ETransformation transformation2 = kindr::minimal::transformationFromHermiteTransformation(leaf2);
-//  EVector3 angVel2 = kindr::minimal::angularVelocitiesFromHermiteTransformation(leaf2);
-//  EVector3 vel2 = kindr::minimal::velocitiesFromHermiteTransformation(leaf2);
-//  EQuaternion quat2 = kindr::minimal::rotationFromTransformation(transformation2);
-//  EVector3 trans2 = kindr::minimal::translationFromTransformation(transformation2);
-//
-//  EQuaternion quat = kindr::minimal::hermiteQuaternionInterpolation(quat1,
-//                                                                    angVel1,
-//                                                                    quat2,
-//                                                                    angVel2,
-//                                                                    alpha,
-//                                                                    dt_sec);
-//
-//  EVector3 trans = kindr::minimal::hermiteInterpolation<Vector3>(trans1,
-//                                                                 vel1,
-//                                                                 trans2,
-//                                                                 vel2,
-//                                                                 alpha,
-//                                                                 dt_sec);
-//
-//  return kindr::minimal::transformationFromComponents(quat, trans);
-//}
-
-// gtsam::Expression<typename CubicHermiteSE3Curve::DerivativeType>
-// CubicHermiteSE3Curve::getDerivativeExpression(const Time& time, unsigned derivativeOrder) const {
-//  // \todo Abel and Renaud
-//  CHECK(false) << "Not implemented";
-//}
-
-// void CubicHermiteSE3Curve::addPriorFactors(gtsam::NonlinearFactorGraph* graph, Time priorTime) const {
-//
-//  gtsam::noiseModel::Constrained::shared_ptr priorNoise = gtsam::noiseModel::Constrained::All(gtsam::traits<Coefficient>::dimension);
-//
-//  //Add one fixed prior at priorTime and two before to ensure that at least two
-//  CoefficientIter rVal0, rVal1;
-//  manager_.getCoefficientsAt(priorTime, &rVal0, &rVal1);
-//
-//  gtsam::ExpressionFactor<Coefficient> f0(priorNoise,
-//                                          rVal0->second.coefficient,
-//                                          gtsam::Expression<Coefficient>(rVal0->second.key));
-//  gtsam::ExpressionFactor<Coefficient> f1(priorNoise,
-//                                          rVal1->second.coefficient,
-//                                          gtsam::Expression<Coefficient>(rVal1->second.key));
-//  graph->push_back(f0);
-//  graph->push_back(f1);
-//
-//}
-
 /// \brief Evaluate the angular velocity of Frame b as seen from Frame a, expressed in Frame a.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularVelocityA(Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief Evaluate the angular velocity of Frame a as seen from Frame b, expressed in Frame b.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularVelocityB(Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief Evaluate the velocity of Frame b as seen from Frame a, expressed in Frame a.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearVelocityA(Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief Evaluate the velocity of Frame a as seen from Frame b, expressed in Frame b.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearVelocityB(Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief evaluate the velocity/angular velocity of Frame b as seen from Frame a,
 /// expressed in Frame a. The return value has the linear velocity (0,1,2),
 /// and the angular velocity (3,4,5).
 Vector6d CubicHermiteSE3Curve::evaluateTwistA(Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Vector6d{};
 }
 /// \brief evaluate the velocity/angular velocity of Frame a as seen from Frame b,
 /// expressed in Frame b. The return value has the linear velocity (0,1,2),
 /// and the angular velocity (3,4,5).
 Vector6d CubicHermiteSE3Curve::evaluateTwistB(Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Vector6d{};
 }
 /// \brief Evaluate the angular derivative of Frame b as seen from Frame a, expressed in Frame a.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularDerivativeA(unsigned /*derivativeOrder*/, Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief Evaluate the angular derivative of Frame a as seen from Frame b, expressed in Frame b.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularDerivativeB(unsigned /*derivativeOrder*/, Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief Evaluate the derivative of Frame b as seen from Frame a, expressed in Frame a.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearDerivativeA(unsigned /*derivativeOrder*/, Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief Evaluate the derivative of Frame a as seen from Frame b, expressed in Frame b.
 Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearDerivativeB(unsigned /*derivativeOrder*/, Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Eigen::Vector3d{};
 }
 /// \brief evaluate the velocity/angular derivative of Frame b as seen from Frame a,
 /// expressed in Frame a. The return value has the linear velocity (0,1,2),
 /// and the angular velocity (3,4,5).
 Vector6d CubicHermiteSE3Curve::evaluateDerivativeA(unsigned /*derivativeOrder*/, Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Vector6d{};
 }
 /// \brief evaluate the velocity/angular velocity of Frame a as seen from Frame b,
 /// expressed in Frame b. The return value has the linear velocity (0,1,2),
 /// and the angular velocity (3,4,5).
 Vector6d CubicHermiteSE3Curve::evaluateDerivativeB(unsigned /*derivativeOrder*/, Time /*time*/) {
-  CHECK(false) << "Not implemented";
+  assert(false && "Not implemented");
   return Vector6d{};
 }
 

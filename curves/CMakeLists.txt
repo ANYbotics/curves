@@ -7,6 +7,12 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CATKIN_PACKAGE_DEPENDENCIES
+  kindr
+  message_logger
+  std_utils
+)
+
 find_package(catkin REQUIRED
   COMPONENTS
   ${CATKIN_PACKAGE_DEPENDENCIES}
@@ -15,24 +21,8 @@ find_package(catkin REQUIRED
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
 
-# Attempt to find catkinized kindr
-find_package(kindr QUIET)
-if(NOT kindr_FOUND)
-  # Attempt to find package-based kindr
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(kindr kindr REQUIRED)
-endif()
-
-# Glog
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(glog libglog REQUIRED)
-
 # Add Doxygen documentation
 add_subdirectory(doc/doxygen)
-
-set(CATKIN_PACKAGE_HEADER_DEPENDENCIES
-  std_utils
-)
 
 catkin_package(
   INCLUDE_DIRS
@@ -41,11 +31,9 @@ catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
   CATKIN_DEPENDS
-    ${CATKIN_PACKAGE_HEADER_DEPENDENCIES}
+    ${CATKIN_PACKAGE_DEPENDENCIES}
   DEPENDS
     Boost
-    glog
-    kindr
 )
 
 add_library(${PROJECT_NAME}
@@ -69,13 +57,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
-  ${kindr_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
-  glog
 )
 
 install(TARGETS
@@ -118,7 +104,6 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_${PROJECT_NAME}
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
-    glog
   )
 
   find_package(cmake_code_coverage QUIET)
