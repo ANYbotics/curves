@@ -20,14 +20,6 @@ find_package(catkin REQUIRED
 
 find_package(Eigen3 REQUIRED)
 
-# Attempt to find catkinized kindr
-find_package(kindr QUIET)
-if(NOT kindr_FOUND)
-  # Attempt to find package-based kindr
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(kindr kindr REQUIRED)
-endif()
-
 # Declare this project as a catkin package
 catkin_package(
   INCLUDE_DIRS
@@ -58,7 +50,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
-  ${kindr_INCLUDE_DIRS}
 )
 
 target_link_libraries(
