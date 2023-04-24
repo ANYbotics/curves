@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<launch>
-
-  <!-- Launch the testing counterpart ROS node -->
-  <test pkg="curves_ros" type="test_curves_ros" test-name="test_curves_ros" time-limit="100.0"/>
-
-</launch>
