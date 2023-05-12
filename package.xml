@@ -3,7 +3,7 @@
 <package format="2">
 
   <name>curves</name>
-  <version>0.4.12</version>
+  <version>0.4.13</version>
   <description>Curves spline library.</description>
 
   <maintainer email="vyuryev@anybotics.com">Valentin Yuryev</maintainer>
