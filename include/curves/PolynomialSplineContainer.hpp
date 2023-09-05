@@ -1,27 +1,16 @@
-/*
- * PolynomialSplineContainer.hpp
- *
- *  Created on: Dec 8, 2014
- *      Author: C. Dario Bellicoso, Peter Fankhauser
- */
-
 #pragma once
 
-// Eigen
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include "curves/polynomial_splines.hpp"
-
-// std
 #include <iostream>
 #include <limits>
 #include <memory>
 
-// boost
+#include <Eigen/Core>
+#include <Eigen/Dense>
 #include <boost/math/special_functions/pow.hpp>
 
-// std_utils
 #include <std_utils/containers/VectorMaxSize.hpp>
+
+#include "curves/PolynomialSpline.hpp"
 
 namespace curves {
 

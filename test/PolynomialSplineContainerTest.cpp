@@ -1,16 +1,6 @@
-/*
- * PolynomialSplineContainerTest.cpp
- *
- *  Created on: Feb 3, 2015
- *      Author: Péter Fankhauser, Christian Gehring
- *   Institute: ETH Zurich, Autonomous Systems Lab
- */
-
-// gtest
 #include <gtest/gtest.h>
 
-// curves
-#include "curves/polynomial_splines_containers.hpp"
+#include "curves/PolynomialSplineContainer.hpp"
 
 TEST(PolynomialSplineContainer, getActiveSplineIndexAtTime) {
   std::vector<double> knotPos;
@@ -24,7 +14,7 @@ TEST(PolynomialSplineContainer, getActiveSplineIndexAtTime) {
   knotVal.push_back(1.0);
   knotVal.push_back(2.0);
 
-  curves::PolynomialSplineContainerQuintic polyContainer;
+  curves::PolynomialSplineContainer<5> polyContainer;
   polyContainer.setData(knotPos, knotVal, 0.0, 0.0, 0.0, 0.0);
 
   double timeOffset = 0.0;
@@ -63,7 +53,7 @@ TEST(PolynomialSplineContainer, eval) {
   double finalVelocity = 0.3;
   double finalAcceleration = 0.4;
 
-  curves::PolynomialSplineContainerQuintic polyContainer;
+  curves::PolynomialSplineContainer<5> polyContainer;
   polyContainer.setData(knotPos, knotVal, initialVelocity, initialAcceleration, finalVelocity, finalAcceleration);
 
   for (unsigned int i = 0; i < knotVal.size() - 1; i++) {
@@ -97,7 +87,7 @@ TEST(PolynomialSplineContainer, getState) {
   knotVal.push_back(1.0);
   knotVal.push_back(2.0);
 
-  curves::PolynomialSplineContainerQuintic polyContainer;
+  curves::PolynomialSplineContainer<5> polyContainer;
   polyContainer.setData(knotPos, knotVal, 0.0, 0.0, 0.0, 0.0);
 
   constexpr double containerTime = 0.4;

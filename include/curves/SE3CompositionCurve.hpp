@@ -176,4 +176,4 @@ class SE3CompositionCurve : public SE3Curve {
 
 }  // namespace curves
 
-#include "SE3CompositionCurve-inl.hpp"
+#include "SE3CompositionCurve.tpp"

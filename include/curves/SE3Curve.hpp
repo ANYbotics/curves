@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Eigen/Core>
+
 #include "curves/Curve.hpp"
 #include "curves/SE3Config.hpp"
 

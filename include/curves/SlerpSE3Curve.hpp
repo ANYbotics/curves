@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include "CubicHermiteSE3Curve.hpp"
-#include "LocalSupport2CoefficientManager.hpp"
-#include "SE3CompositionCurve.hpp"
-#include "SE3Curve.hpp"
-#include "SamplingPolicy.hpp"
-#include "kindr/Core"
+#include <kindr/Core>
+
+#include "curves/CubicHermiteSE3Curve.hpp"
+#include "curves/LocalSupport2CoefficientManager.hpp"
+#include "curves/SE3CompositionCurve.hpp"
+#include "curves/SE3Curve.hpp"
+#include "curves/SamplingPolicy.hpp"
 
 namespace curves {
 

@@ -1,18 +1,8 @@
-/*
- * PolynomialSplineContainerTest.cpp
- *
- *  Created on: Apr 2017
- *      Author: Dario Bellicoso
- *   Institute: ETH Zurich
- */
+#include <random>
 
 #include <gtest/gtest.h>
 
-// curves
-#include "curves/polynomial_splines.hpp"
-
-// random number generation
-#include <random>
+#include "curves/PolynomialSpline.hpp"
 
 // Construct a random number generator
 std::random_device randomDevice;
@@ -20,7 +10,7 @@ std::default_random_engine randomEngine(randomDevice());
 std::uniform_real_distribution<double> uniformDistribution(-10.0, 10.0);
 
 TEST(PolynomialSplines, PolynomialSplinesCubic) {
-  curves::PolynomialSplineCubic spline;
+  curves::PolynomialSpline<3> spline;
 
   curves::SplineOptions opts(std::abs(uniformDistribution(randomEngine)), uniformDistribution(randomEngine),
                              uniformDistribution(randomEngine), uniformDistribution(randomEngine), uniformDistribution(randomEngine),
@@ -36,7 +26,7 @@ TEST(PolynomialSplines, PolynomialSplinesCubic) {
 }
 
 TEST(PolynomialSplines, PolynomialSplinesQuintic) {
-  curves::PolynomialSplineQuintic spline;
+  curves::PolynomialSpline<5> spline;
 
   curves::SplineOptions opts(std::abs(uniformDistribution(randomEngine)), uniformDistribution(randomEngine),
                              uniformDistribution(randomEngine), uniformDistribution(randomEngine), uniformDistribution(randomEngine),

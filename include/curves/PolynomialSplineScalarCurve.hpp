@@ -14,7 +14,6 @@
 #include "curves/Curve.hpp"
 #include "curves/PolynomialSplineContainer.hpp"
 #include "curves/ScalarCurveConfig.hpp"
-#include "curves/polynomial_splines_containers.hpp"
 
 namespace curves {
 
@@ -98,7 +97,7 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     }
 
     for (const auto& options : optionList) {
-      container_.addSpline(PolynomialSplineQuintic(options));
+      container_.addSpline(PolynomialSpline<5>(options));
     }
     minTime_ = 0.0;
   }
@@ -115,6 +114,6 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
   Time minTime_;
 };
 
-using PolynomialSplineQuinticScalarCurve = PolynomialSplineScalarCurve<PolynomialSplineContainerQuintic>;
+using PolynomialSplineQuinticScalarCurve = PolynomialSplineScalarCurve<PolynomialSplineContainer<5>>;
 
 } /* namespace curves */

@@ -182,4 +182,4 @@ class LocalSupport2CoefficientManager {
 
 }  // namespace curves
 
-#include "LocalSupport2CoefficientManager-inl.hpp"
+#include "LocalSupport2CoefficientManager.tpp"

@@ -39,7 +39,6 @@ catkin_package(
 add_library(${PROJECT_NAME}
   src/KeyGenerator.cpp
   src/CubicHermiteSE3Curve.cpp
-  src/CubicHermiteE3Curve.cpp
   src/SlerpSE3Curve.cpp
   src/polynomial_splines_traits.cpp
   src/helpers.cpp
@@ -87,10 +86,8 @@ if(CATKIN_ENABLE_TESTING)
     test/test_main.cpp
     test/CubicHermiteSE3CurveTest.cpp
     test/PolynomialSplineContainerTest.cpp
-    test/PolynomialSplineVectorSpaceCurveTest.cpp
     test/PolynomialSplineQuinticScalarCurveTest.cpp
     test/PolynomialSplinesTest.cpp
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
   )
 
   target_include_directories(test_${PROJECT_NAME} PRIVATE
