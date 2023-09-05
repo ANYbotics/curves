@@ -34,8 +34,6 @@ class PolynomialSplineContainer {
   using SplineList = std_utils::VectorMaxSize<SplineType, maxKnots_ - 1>;
   using SplineDurations = std_utils::VectorMaxSize<double, maxKnots_ - 1>;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   PolynomialSplineContainer();
 
   //! Get a pointer to the spline with a given index.
