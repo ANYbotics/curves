@@ -1,20 +1,10 @@
-/*
- * PolynomialSpline.hpp
- *
- *  Created on: Mar 7, 2017
- *      Author: Dario Bellicoso
- */
-
 #pragma once
 
-// eigen
+#include <numeric>
+
 #include <Eigen/Core>
 
-// curves
 #include "curves/polynomial_splines_traits.hpp"
-
-// stl
-#include <numeric>
 
 namespace curves {
 
@@ -41,21 +31,14 @@ class PolynomialSpline {
   using SplineImplementation = spline_traits::spline_rep<double, splineOrder>;
   using SplineCoefficients = typename SplineImplementation::SplineCoefficients;
   using EigenTimeVectorType = Eigen::Matrix<double, 1, coefficientCount>;
-  using EigenCoefficientVectorType = Eigen::Matrix<double, coefficientCount, 1>;
 
-  PolynomialSpline() : duration_(0.0), didEvaluateCoeffs_(false), coefficients_() {}
+  PolynomialSpline() : duration_(0.0), coefficients_() {}
 
   template <typename SplineCoeff_>
   PolynomialSpline(SplineCoeff_&& coefficients, double duration)
-      : duration_(duration), didEvaluateCoeffs_(true), coefficients_(std::forward<SplineCoeff_>(coefficients)) {}
+      : duration_(duration), coefficients_(std::forward<SplineCoeff_>(coefficients)) {}
 
-  explicit PolynomialSpline(const SplineOptions& options) : duration_(options.tf_), didEvaluateCoeffs_(true) {
-    computeCoefficients(options);
-  }
-
-  explicit PolynomialSpline(SplineOptions&& options) : duration_(options.tf_), didEvaluateCoeffs_(true) {
-    computeCoefficients(std::move(options));
-  }
+  explicit PolynomialSpline(const SplineOptions& options) : duration_(options.tf_) { computeCoefficients(options); }
 
   virtual ~PolynomialSpline() = default;
 
@@ -64,12 +47,6 @@ class PolynomialSpline {
 
   PolynomialSpline(const PolynomialSpline&) = default;
   PolynomialSpline& operator=(const PolynomialSpline&) = default;
-
-  //! Get the coefficients of the spline.
-  const SplineCoefficients& getCoefficients() const { return coefficients_; }
-
-  //! Get the coefficients of the spline.
-  SplineCoefficients* getCoefficientsPtr() { return &coefficients_; }
 
   //! Compute the coefficients of the spline.
   template <typename SplineOptionsType_>
@@ -123,9 +100,6 @@ class PolynomialSpline {
  private:
   //! The duration of the spline in seconds.
   double duration_{0.};
-
-  //! True if the coefficents were computed at least once.
-  bool didEvaluateCoeffs_{false};
 
   /*
    * s(t) = an*t^n + ... + a1*t + a0

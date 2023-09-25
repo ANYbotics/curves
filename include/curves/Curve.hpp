@@ -1,11 +1,3 @@
-/*
- * Curve.hpp
- *
- *  Created on: Mar 5, 2015
- *      Author: Paul Furgale, Abel Gawel, Renaud Dube, Péter Fankhauser
- *   Institute: ETH Zurich, Autonomous Systems Lab
- */
-
 #pragma once
 
 #include <string>
@@ -14,7 +6,7 @@
 namespace curves {
 
 using Time = double;
-using Key = size_t;
+using Key = std::size_t;
 
 template <typename CurveConfig>
 class Curve {
@@ -37,12 +29,6 @@ class Curve {
   ///\defgroup Info
   ///\name Methods to get information about the curve.
   ///@{
-
-  /// Print the value of the coefficient, for debugging and unit tests
-  virtual void print(const std::string& str) const = 0;
-
-  /// \brief The dimension of the underlying manifold
-  // size_t dim() const;  // get this form the curve's value type
 
   /// The first valid time of the curve.
   virtual Time getMinTime() const = 0;
@@ -80,9 +66,6 @@ class Curve {
 
   /// \brief Clear all the curve coefficients
   virtual void clear() = 0;
-
-  /// \brief Perform a rigid transformation on the left side of the curve
-  virtual void transformCurve(ValueType T) = 0;
 };
 
 }  // namespace curves

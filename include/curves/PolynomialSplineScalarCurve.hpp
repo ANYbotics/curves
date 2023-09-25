@@ -1,11 +1,3 @@
-/*
- * PolynomialSplineScalarCurve.hpp
- *
- *  Created on: Mar 5, 2015
- *      Author: Péter Fankhauser, Dario Bellicoso
- *   Institute: ETH Zurich, Autonomous Systems Lab
- */
-
 #pragma once
 
 #include <string>
@@ -13,9 +5,13 @@
 
 #include "curves/Curve.hpp"
 #include "curves/PolynomialSplineContainer.hpp"
-#include "curves/ScalarCurveConfig.hpp"
 
 namespace curves {
+
+struct ScalarCurveConfig {
+  using ValueType = double;
+  using DerivativeType = double;
+};
 
 template <typename SplineContainerType_>
 class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
@@ -27,25 +23,6 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
   using SplineContainerType = SplineContainerType_;
 
   PolynomialSplineScalarCurve() : Parent(), container_(), minTime_(0.0) {}
-
-  void print(const std::string& /*str*/) const override {
-    const double minTime = getMinTime();
-    const double maxTime = getMaxTime();
-    double timeAtEval = minTime;
-    int nPoints = 15;
-    double timeDiff = (maxTime - minTime) / (nPoints - 1);
-
-    for (int i = 0; i < nPoints; i++) {
-      double firstDerivative = 0.;
-      double secondDerivative = 0.;
-      double value = 0.;
-      evaluate(value, timeAtEval);
-      evaluateDerivative(firstDerivative, timeAtEval, 1);
-      evaluateDerivative(secondDerivative, timeAtEval, 2);
-      printf("t: %lf, x: %lf dx: %lf dxx: %lf\n", timeAtEval, value, firstDerivative, secondDerivative);
-      timeAtEval += timeDiff;
-    }
-  }
 
   Time getMinTime() const override { return minTime_; }
 
@@ -106,8 +83,6 @@ class PolynomialSplineScalarCurve : public Curve<ScalarCurveConfig> {
     container_.reset();
     minTime_ = 0.0;
   }
-
-  void transformCurve(const ValueType /*T*/) override { assert(false && "Not implemented"); }
 
  private:
   SplineContainerType container_;

@@ -1,11 +1,3 @@
-/*
- * CubicHermiteSE3Curve.hpp
- *
- *  Created on: Feb 10, 2015
- *      Author: Abel Gawel, Renaud Dube, Péter Fankhauser, Christian Gehring
- *   Institute: ETH Zurich, Autonomous Systems Lab
- */
-
 #pragma once
 
 #include <utility>
@@ -36,10 +28,6 @@ struct HermiteTransformation {
   Transform getTransformation() const { return transformation_; }
 
   Twist getTransformationDerivative() const { return transformationDerivative_; }
-
-  void setTransformation(const Transform& transformation) { transformation_ = transformation; }
-
-  void setTransformationDerivative(const Twist& transformationDerivative) { transformationDerivative_ = transformationDerivative; }
 
  private:
   Transform transformation_;
@@ -89,11 +77,6 @@ class CubicHermiteSE3Curve : public SE3Curve {
 
   CubicHermiteSE3Curve();
 
-  /// Print the value of the coefficient, for debugging and unit tests
-  void print(const std::string& str) const override;
-
-  bool writeEvalToFile(const std::string& filename, int nSamples) const;
-
   /// The first valid time for the curve.
   Time getMinTime() const override;
 
@@ -123,8 +106,6 @@ class CubicHermiteSE3Curve : public SE3Curve {
                                const DerivativeType& initialDerivative = DerivativeType(),
                                const DerivativeType& finalDerivative = DerivativeType(), std::vector<Key>* outKeys = nullptr);
 
-  void fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values, std::vector<Key>* outKeys = nullptr);
-
   /// Evaluate the ambient space of the curve.
   bool evaluate(ValueType& value, Time time) const override;
 
@@ -132,50 +113,6 @@ class CubicHermiteSE3Curve : public SE3Curve {
   bool evaluateDerivative(DerivativeType& derivative, Time time, unsigned int derivativeOrder) const override;
 
   bool evaluateLinearAcceleration(kindr::Acceleration3D& linearAcceleration, Time time);
-
-  /// \brief Evaluate the angular velocity of Frame b as seen from Frame a, expressed in Frame a.
-  Eigen::Vector3d evaluateAngularVelocityA(Time time) override;
-
-  /// \brief Evaluate the angular velocity of Frame a as seen from Frame b, expressed in Frame b.
-  Eigen::Vector3d evaluateAngularVelocityB(Time time) override;
-
-  /// \brief Evaluate the velocity of Frame b as seen from Frame a, expressed in Frame a.
-  Eigen::Vector3d evaluateLinearVelocityA(Time time) override;
-
-  /// \brief Evaluate the velocity of Frame a as seen from Frame b, expressed in Frame b.
-  Eigen::Vector3d evaluateLinearVelocityB(Time time) override;
-
-  /// \brief evaluate the velocity/angular velocity of Frame b as seen from Frame a,
-  ///        expressed in Frame a. The return value has the linear velocity (0,1,2),
-  ///        and the angular velocity (3,4,5).
-  Vector6d evaluateTwistA(Time time) override;
-
-  /// \brief evaluate the velocity/angular velocity of Frame a as seen from Frame b,
-  ///        expressed in Frame b. The return value has the linear velocity (0,1,2),
-  ///        and the angular velocity (3,4,5).
-  Vector6d evaluateTwistB(Time time) override;
-
-  /// \brief Evaluate the angular derivative of Frame b as seen from Frame a, expressed in Frame a.
-  Eigen::Vector3d evaluateAngularDerivativeA(unsigned derivativeOrder, Time time) override;
-
-  /// \brief Evaluate the angular derivative of Frame a as seen from Frame b, expressed in Frame b.
-  Eigen::Vector3d evaluateAngularDerivativeB(unsigned derivativeOrder, Time time) override;
-
-  /// \brief Evaluate the derivative of Frame b as seen from Frame a, expressed in Frame a.
-  Eigen::Vector3d evaluateLinearDerivativeA(unsigned derivativeOrder, Time time) override;
-
-  /// \brief Evaluate the derivative of Frame a as seen from Frame b, expressed in Frame b.
-  Eigen::Vector3d evaluateLinearDerivativeB(unsigned derivativeOrder, Time time) override;
-
-  /// \brief evaluate the velocity/angular derivative of Frame b as seen from Frame a,
-  ///        expressed in Frame a. The return value has the linear velocity (0,1,2),
-  ///        and the angular velocity (3,4,5).
-  Vector6d evaluateDerivativeA(unsigned derivativeOrder, Time time) override;
-
-  /// \brief evaluate the velocity/angular velocity of Frame a as seen from Frame b,
-  ///        expressed in Frame b. The return value has the linear velocity (0,1,2),
-  ///        and the angular velocity (3,4,5).
-  Vector6d evaluateDerivativeB(unsigned derivativeOrder, Time time) override;
 
   // set the minimum sampling period
   void setMinSamplingPeriod(Time time) override;
@@ -187,76 +124,16 @@ class CubicHermiteSE3Curve : public SE3Curve {
   // clear the curve
   void clear() override;
 
-  /// \brief Perform a rigid transformation on the left side of the curve
-  void transformCurve(ValueType T) override;
-
-  void saveCurveTimesAndValues(const std::string& filename) const override;
-
-  void saveCurveAtTimes(const std::string& filename, std::vector<Time> times) const override;
-
-  void saveCorrectionCurveAtTimes(const std::string& /*filename*/, std::vector<Time> /*times*/) const override {}
-
-  void getCurveTimes(std::vector<Time>* outTimes) const override;
-
-  /// \brief Returns the number of coefficients in the correction curve
-  int correctionSize() const override { return 0; }
-
-  /// \brief Fold in the correction curve into the base curve and reinitialize
-  ///        correction curve coefficients to identity transformations.
-  void foldInCorrections() override {}
-
-  /// \brief Add coefficients to the correction curve at given times.
-  void setCorrectionTimes(const std::vector<Time>& /*times*/) override {}
-
-  /// \brief Remove a correction coefficient at the specified time.
-  void removeCorrectionCoefficientAtTime(Time /*time*/) override {}
-
-  /// \brief Set the correction coefficient value at the specified time.
-  void setCorrectionCoefficientAtTime(Time /*time*/, ValueType /*value*/) override {}
-
-  /// \brief Reset the correction curve to identity values with knots at desired times
-  void resetCorrectionCurve(const std::vector<Time>& /*times*/) override {}
-
-  /// \brief Set the base curve to given values with knots at desired times
-  /// Resets the curve beforehand.
-  void setBaseCurve(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/) override {}
-
-  /// \brief Add / replace the given coefficients without resetting the curve.
-  void setBaseCurvePart(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/) override {}
-
-  /// \brief Modifies values of the base coefficient in batch, starting at times[0] and assuming that
-  /// a coefficient exists at all the specified times.
-  void modifyBaseCoefficientsValuesInBatch(const std::vector<Time>& /*times*/, const std::vector<ValueType>& /*values*/) override {}
-
-  void getBaseCurveTimes(std::vector<Time>* /*outTimes*/) const override {}
-
-  void getBaseCurveTimesInWindow(std::vector<Time>* /*outTimes*/, Time /*begTime*/, Time /*endTime*/) const override {}
-
-  // return number of coefficients curve is composed of
-  int baseSize() const override { return size(); }
-
-  void saveCorrectionCurveTimesAndValues(const std::string& /*filename*/) const override {}
-
  private:
   LocalSupport2CoefficientManager<Coefficient> manager_;
   SamplingPolicy hermitePolicy_;
 };
 
 using SE3 = kindr::HomogeneousTransformationPosition3RotationQuaternionD;
-using SO3 = SE3::Rotation;
-using AngleAxis = kindr::AngleAxisPD;
 using RotationQuaternion = kindr::RotationQuaternionPD;
 using RotationQuaternionDiff = kindr::RotationQuaternionDiffD;
 using Vector6 = Eigen::Matrix<double, 6, 1>;
 using Twist = kindr::TwistGlobalD;
-
-SE3 transformationPower(SE3 T, double alpha);
-
-SE3 composeTransformations(SE3 A, SE3 B);
-
-SE3 inverseTransformation(SE3 T);
-
-SE3 invertAndComposeImplementation(SE3 A, SE3 B);
 
 // implements the special (extend) policies for Cubic Hermite curves
 template <>
@@ -353,6 +230,5 @@ namespace kindr {
 
 using ValueType = curves::SE3Curve::ValueType;
 using DerivativeType = curves::SE3Curve::DerivativeType;
-using Coefficient = kindr::HermiteTransformation<double>;
 
 }  // namespace kindr

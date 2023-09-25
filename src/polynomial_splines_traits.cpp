@@ -1,11 +1,3 @@
-/*
- * polynomial_splines.cpp
- *
- *  Created on: Mar 7, 2017
- *      Author: Dario Bellicoso
- */
-
-// curves
 #include "curves/polynomial_splines_traits.hpp"
 
 namespace curves {

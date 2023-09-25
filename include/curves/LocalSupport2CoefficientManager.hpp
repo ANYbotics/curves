@@ -1,19 +1,10 @@
-/*
- * LocalSupport2CoefficientManager.hpp
- *
- *  Created on: Oct 10, 2014
- *      Author: Paul Furgale, Abel Gawel, Renaud Dube, Péter Fankhauser
- *   Institute: ETH Zurich, Autonomous Systems Lab
- */
-
 #pragma once
 
 #include <cstddef>
 #include <map>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <boost/unordered_map.hpp>
 
 #include <Eigen/Core>
 
@@ -49,30 +40,13 @@ class LocalSupport2CoefficientManager {
   using CoefficientIter = typename TimeToKeyCoefficientMap::const_iterator;
 
   /// Key/Coefficient pairs
-  using CoefficientMap = boost::unordered_map<size_t, Coefficient>;
+  using CoefficientMap = std::unordered_map<size_t, Coefficient>;
 
   /// Compare this Coefficient manager with another for equality.
   bool equals(const LocalSupport2CoefficientManager& other) const;
 
-  /// Print the value of the coefficient, for debugging and unit tests
-  void print(const std::string& str = "") const;
-
-  /// Get all of the keys in this manager. This method clears the
-  /// list of keys before filling it.
-  void getKeys(std::vector<Key>* outKeys) const;
-
-  /// Get all of the keys in this manager. The list is not cleared
-  /// before pushing it to the container.
-  void appendKeys(std::vector<Key>* outKeys) const;
-
   /// Get a sorted list of coefficient times
   void getTimes(std::vector<Time>* outTimes) const;
-
-  /// Get a sorted list of coefficient times in a given time window
-  void getTimesInWindow(std::vector<Time>* outTimes, Time begTime, Time endTime) const;
-
-  /// Modify multiple coefficient values. Time is assumed to be ordered.
-  void modifyCoefficientsValuesInBatch(const std::vector<Time>& times, const std::vector<Coefficient>& values);
 
   /// \brief insert a coefficient at a time and return
   ///        the key for the coefficient
@@ -92,11 +66,6 @@ class LocalSupport2CoefficientManager {
   /// \brief Modify a coefficient by specifying a new time and value
   void modifyCoefficient(typename TimeToKeyCoefficientMap::iterator it, Time time, const Coefficient& coefficient);
 
-  /// \brief Remove the coefficient with this key.
-  ///
-  /// It is an error if the key does not exist.
-  void removeCoefficientWithKey(Key key);
-
   /// \brief Remove the coefficient at this time
   ///
   /// It is an error if there is no coefficient at this time.
@@ -105,22 +74,11 @@ class LocalSupport2CoefficientManager {
   /// \brief return true if there is a coefficient at this time
   bool hasCoefficientAtTime(Time time) const;
 
-  /// \brief return true if there is a coefficient with this key
-  bool hasCoefficientWithKey(Key key) const;
-
   /// \brief set the coefficient associated with this key
   ///
   /// This function fails if there is no coefficient associated
   /// with this key.
   void updateCoefficientByKey(Key key, const Coefficient& coefficient);
-
-  /// \brief set the coefficient associated with this key
-
-  /// \brief get the coefficient associated with this key
-  Coefficient getCoefficientByKey(Key key) const;
-
-  /// \brief get the coefficient time associated with this key
-  Time getCoefficientTimeByKey(Key key) const;
 
   /// \brief Get the coefficients that are active at a certain time.
   ///
@@ -130,17 +88,6 @@ class LocalSupport2CoefficientManager {
   ///
   /// @returns true if it was successful
   bool getCoefficientsAt(Time time, CoefficientIter* outCoefficient0, CoefficientIter* outCoefficient1) const;
-
-  /// \brief Get the coefficients that are active within a range \f$[t_s,t_e) \f$.
-  void getCoefficientsInRange(Time startTime, Time endTime, CoefficientMap* outCoefficients) const;
-
-  /// \brief Get all of the curve's coefficients.
-  void getCoefficients(CoefficientMap* outCoefficients) const;
-
-  /// \brief Set coefficients.
-  ///
-  /// If any of these coefficients doen't exist, there is an error
-  void updateCoefficients(const CoefficientMap& coefficients);
 
   /// \brief return the number of coefficients
   size_t size() const;
@@ -165,14 +112,9 @@ class LocalSupport2CoefficientManager {
 
   typename TimeToKeyCoefficientMap::iterator coefficientEnd() { return timeToCoefficient_.end(); }
 
-  /// Check the internal consistency of the data structure
-  /// If doExit is true, the function will call exit(0) at
-  /// the end. This is useful for gtest death tests
-  void checkInternalConsistency(bool doExit = false) const;
-
  private:
   /// Key to coefficient mapping
-  boost::unordered_map<Key, typename TimeToKeyCoefficientMap::iterator> keyToCoefficient_;
+  std::unordered_map<Key, typename TimeToKeyCoefficientMap::iterator> keyToCoefficient_;
 
   /// Time to coefficient mapping
   TimeToKeyCoefficientMap timeToCoefficient_;

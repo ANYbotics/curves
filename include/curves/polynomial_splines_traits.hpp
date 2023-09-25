@@ -1,11 +1,11 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <iostream>
 
 #include <Eigen/Core>
 #include <Eigen/QR>
-#include <boost/math/special_functions/pow.hpp>
 
 namespace curves {
 
@@ -92,7 +92,7 @@ struct spline_rep<double, 2> {
   using TimeVectorType = std::array<double, numCoefficients>;
   using SplineCoefficients = std::array<double, numCoefficients>;
 
-  static inline TimeVectorType tau(double tk) noexcept { return {boost::math::pow<2>(tk), tk, 1.0}; }
+  static inline TimeVectorType tau(double tk) noexcept { return {std::pow(tk, 2), tk, 1.0}; }
 
   static inline TimeVectorType dtau(double tk) noexcept { return {2.0 * tk, 1.0, 0.0}; }
 
@@ -104,9 +104,9 @@ struct spline_rep<double, 2> {
 
   //! Map initial pos, initial vel and final pos to spline coefficients.
   static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients) {
-    coefficients[2] = opts.pos0_;                                                                         // a0
-    coefficients[1] = opts.vel0_;                                                                         // a1
-    coefficients[0] = (opts.posT_ - opts.pos0_ - opts.vel0_ * opts.tf_) / boost::math::pow<2>(opts.tf_);  // a2
+    coefficients[2] = opts.pos0_;                                                                 // a0
+    coefficients[1] = opts.vel0_;                                                                 // a1
+    coefficients[0] = (opts.posT_ - opts.pos0_ - opts.vel0_ * opts.tf_) / std::pow(opts.tf_, 2);  // a2
 
     return true;
   }
@@ -121,9 +121,9 @@ struct spline_rep<double, 3> {
   using TimeVectorType = std::array<double, numCoefficients>;
   using SplineCoefficients = std::array<double, numCoefficients>;
 
-  static inline TimeVectorType tau(double tk) noexcept { return {boost::math::pow<3>(tk), boost::math::pow<2>(tk), tk, 1.0}; }
+  static inline TimeVectorType tau(double tk) noexcept { return {std::pow(tk, 3), std::pow(tk, 2), tk, 1.0}; }
 
-  static inline TimeVectorType dtau(double tk) noexcept { return {3.0 * boost::math::pow<2>(tk), 2.0 * tk, 1.0, 0.0}; }
+  static inline TimeVectorType dtau(double tk) noexcept { return {3.0 * std::pow(tk, 2), 2.0 * tk, 1.0, 0.0}; }
 
   static inline TimeVectorType ddtau(double tk) noexcept { return {6.0 * tk, 2.0, 0.0, 0.0}; }
 
@@ -157,15 +157,11 @@ struct spline_rep<double, 4> {
   using TimeVectorType = std::array<double, numCoefficients>;
   using SplineCoefficients = std::array<double, numCoefficients>;
 
-  static inline TimeVectorType tau(double tk) noexcept {
-    return {boost::math::pow<4>(tk), boost::math::pow<3>(tk), boost::math::pow<2>(tk), tk, 1.0};
-  }
+  static inline TimeVectorType tau(double tk) noexcept { return {std::pow(tk, 4), std::pow(tk, 3), std::pow(tk, 2), tk, 1.0}; }
 
-  static inline TimeVectorType dtau(double tk) noexcept {
-    return {4.0 * boost::math::pow<3>(tk), 3.0 * boost::math::pow<2>(tk), 2.0 * tk, 1.0, 0.0};
-  }
+  static inline TimeVectorType dtau(double tk) noexcept { return {4.0 * std::pow(tk, 3), 3.0 * std::pow(tk, 2), 2.0 * tk, 1.0, 0.0}; }
 
-  static inline TimeVectorType ddtau(double tk) noexcept { return {12.0 * boost::math::pow<2>(tk), 6.0 * tk, 2.0, 0.0, 0.0}; }
+  static inline TimeVectorType ddtau(double tk) noexcept { return {12.0 * std::pow(tk, 2), 6.0 * tk, 2.0, 0.0, 0.0}; }
 
   static constexpr TimeVectorType tauZero{{0.0, 0.0, 0.0, 0.0, 1.0}};
   static constexpr TimeVectorType dtauZero{{0.0, 0.0, 0.0, 1.0, 0.0}};
@@ -199,15 +195,15 @@ struct spline_rep<double, 5> {
   using SplineCoefficients = std::array<double, numCoefficients>;
 
   static inline TimeVectorType tau(double tk) noexcept {
-    return {boost::math::pow<5>(tk), boost::math::pow<4>(tk), boost::math::pow<3>(tk), boost::math::pow<2>(tk), tk, 1.0};
+    return {std::pow(tk, 5), std::pow(tk, 4), std::pow(tk, 3), std::pow(tk, 2), tk, 1.0};
   }
 
   static inline TimeVectorType dtau(double tk) noexcept {
-    return {5.0 * boost::math::pow<4>(tk), 4.0 * boost::math::pow<3>(tk), 3.0 * boost::math::pow<2>(tk), 2.0 * tk, 1.0, 0.0};
+    return {5.0 * std::pow(tk, 4), 4.0 * std::pow(tk, 3), 3.0 * std::pow(tk, 2), 2.0 * tk, 1.0, 0.0};
   }
 
   static inline TimeVectorType ddtau(double tk) noexcept {
-    return {20.0 * boost::math::pow<3>(tk), 12.0 * boost::math::pow<2>(tk), 6.0 * tk, 2.0, 0.0, 0.0};
+    return {20.0 * std::pow(tk, 3), 12.0 * std::pow(tk, 2), 6.0 * tk, 2.0, 0.0, 0.0};
   }
 
   static constexpr TimeVectorType tauZero{{0.0, 0.0, 0.0, 0.0, 0.0, 1.0}};

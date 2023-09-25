@@ -1,9 +1,4 @@
-/*
- * PolynomialSplineContainer.tpp
- *
- *  Created on: Dec 8, 2014
- *      Author: C. Dario Bellicoso, Peter Fankhauser
- */
+#include "curves/PolynomialSplineContainer.hpp"
 
 namespace curves {
 
@@ -25,11 +20,6 @@ PolynomialSplineContainer<splineOrder_>::PolynomialSplineContainer()
 template <int splineOrder_>
 typename PolynomialSplineContainer<splineOrder_>::SplineType* PolynomialSplineContainer<splineOrder_>::getSpline(int splineIndex) {
   return &splines_.at(splineIndex);
-}
-
-template <int splineOrder_>
-const typename PolynomialSplineContainer<splineOrder_>::SplineList& PolynomialSplineContainer<splineOrder_>::getSplines() const {
-  return splines_;
 }
 
 template <int splineOrder_>
@@ -81,11 +71,6 @@ double PolynomialSplineContainer<splineOrder_>::getContainerDuration() const {
 }
 
 template <int splineOrder_>
-double PolynomialSplineContainer<splineOrder_>::getContainerTime() const {
-  return containerTime_;
-}
-
-template <int splineOrder_>
 bool PolynomialSplineContainer<splineOrder_>::isEmpty() const {
   return splines_.empty();
 }
@@ -134,11 +119,6 @@ int PolynomialSplineContainer<splineOrder_>::getActiveSplineIndexAtTime(double t
 }
 
 template <int splineOrder_>
-int PolynomialSplineContainer<splineOrder_>::getActiveSplineIndex() const {
-  return activeSplineIdx_;
-}
-
-template <int splineOrder_>
 double PolynomialSplineContainer<splineOrder_>::getPositionAtTime(double t) const {
   if (splines_.empty()) {
     return 0.0;
@@ -184,39 +164,6 @@ double PolynomialSplineContainer<splineOrder_>::getAccelerationAtTime(double t) 
   }
 
   return splines_[activeSplineIdx].getAccelerationAtTime(t - timeOffset);
-}
-
-template <int splineOrder_>
-double PolynomialSplineContainer<splineOrder_>::getEndPosition() const {
-  if (splines_.empty()) {
-    // Spline container is empty.
-    return 0.0;
-  }
-
-  const double lastSplineDuration = splines_.back().getSplineDuration();
-  return splines_.back().getPositionAtTime(lastSplineDuration);
-}
-
-template <int splineOrder_>
-double PolynomialSplineContainer<splineOrder_>::getEndVelocity() const {
-  if (splines_.empty()) {
-    // Spline container is empty.
-    return 0.0;
-  }
-
-  const double lastSplineDuration = splines_.back().getSplineDuration();
-  return splines_.back().getVelocityAtTime(lastSplineDuration);
-}
-
-template <int splineOrder_>
-double PolynomialSplineContainer<splineOrder_>::getEndAcceleration() const {
-  if (splines_.empty()) {
-    // Spline container is empty.
-    return 0.0;
-  }
-
-  const double lastSplineDuration = splines_.back().getSplineDuration();
-  return splines_.back().getAccelerationAtTime(lastSplineDuration);
 }
 
 template <int splineOrder_>
@@ -507,46 +454,6 @@ bool PolynomialSplineContainer<splineOrder_>::extractSplineCoefficients(const Ei
     this->addSpline(SplineType(coefficients, splineDurations[splineId]));
   }
 
-  return true;
-}
-
-template <int splineOrder_>
-bool PolynomialSplineContainer<splineOrder_>::checkContainer() const {
-  if (containerTime_ < 0.0) {
-    std::cout << "[PolynomialSplineContainer::checkContainer] negative container time.\n";
-    return false;
-  }
-
-  if (containerDuration_ < 0.0) {
-    std::cout << "[PolynomialSplineContainer::checkContainer] negative container duration.\n";
-    return false;
-  }
-
-  if (containerTime_ > containerDuration_) {
-    std::cout << "[PolynomialSplineContainer::checkContainer] container time is larger than container duration.\n";
-    return false;
-  }
-
-  if (activeSplineIdx_ < 0) {
-    std::cout << "[PolynomialSplineContainer::checkContainer] negative container index.\n";
-    return false;
-  }
-
-  for (const auto& spline : splines_) {
-    if (spline.getSplineDuration() < 0.0) {
-      std::cout << "[PolynomialSplineContainer::checkContainer] negative spline duration.\n";
-      return false;
-    }
-
-    const auto& coeffs = spline.getCoefficients();
-
-    for (auto& coeff : coeffs) {
-      if (std::isnan(coeff)) {
-        std::cout << "[PolynomialSplineContainer::checkContainer] Spline coeff is nan.\n";
-        return false;
-      }
-    }
-  }
   return true;
 }
 

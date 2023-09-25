@@ -24,7 +24,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>boost</depend>
   <depend>kindr</depend>
   <depend>message_logger</depend>
   <depend>std_utils</depend>

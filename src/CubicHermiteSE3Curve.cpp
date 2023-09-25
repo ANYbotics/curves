@@ -1,88 +1,15 @@
-/*
- * CubicHermiteSE3Curve.cpp
- *
- *  Created on: Feb 10, 2015
- *      Author: Abel Gawel, Renaud Dube, Péter Fankhauser, Christian Gehring
- *   Institute: ETH Zurich, Autonomous Systems Lab
- */
+#include "curves/CubicHermiteSE3Curve.hpp"
 
 #include <iostream>
 
-#include "curves/CubicHermiteSE3Curve.hpp"
-#include "curves/SlerpSE3Curve.hpp"
-
 #include <kindr/rotations/Rotation.hpp>
+
+#include "curves/SlerpSE3Curve.hpp"
 
 namespace curves {
 
 CubicHermiteSE3Curve::CubicHermiteSE3Curve() : SE3Curve() {
   hermitePolicy_.setMinimumMeasurements(4);
-}
-
-void CubicHermiteSE3Curve::print(const std::string& str) const {
-  std::cout << "=========================================" << std::endl;
-  std::cout << "======= Cubic Hermite SE3 CURVE =========" << std::endl;
-  std::cout << str << std::endl;
-  std::cout << "num of coefficients: " << manager_.size() << std::endl;
-  std::cout << "dimension: " << 6 << std::endl;
-  std::stringstream ss;
-  std::vector<Key> keys;
-  std::vector<Time> times;
-  manager_.getTimes(&times);
-  manager_.getKeys(&keys);
-  std::cout << "curve defined between times: " << manager_.getMinTime() << " and " << manager_.getMaxTime() << std::endl;
-  std::cout << "=========================================" << std::endl;
-  for (size_t i = 0; i < manager_.size(); i++) {
-    ss << "coefficient " << keys[i] << ": ";
-    ss << manager_.getCoefficientByKey(keys[i]).getTransformation() << std::endl;
-    ss << " | time: " << times[i];
-    ss << std::endl;
-    ss.str("");
-  }
-  std::cout << "=========================================" << std::endl;
-}
-
-bool CubicHermiteSE3Curve::writeEvalToFile(const std::string& filename, int nSamples) const {
-  FILE* fp = fopen(filename.c_str(), "w");
-  if (fp == nullptr) {
-    std::cout << "Could not open file to write" << std::endl;
-    return false;
-  }
-  fprintf(fp, "t ");
-  fprintf(fp, "px py pz ");
-  fprintf(fp, "rw rx ry rz ");
-  fprintf(fp, "vx vy vz ");
-  fprintf(fp, "wx wy wz ");
-  fprintf(fp, "\n");
-
-  Time dt = (getMaxTime() - getMinTime()) / (nSamples - 1);
-  ValueType pose;
-  DerivativeType twist;
-  Time t = getMinTime();
-  while (t < getMaxTime()) {
-    if (!evaluate(pose, t)) {
-      std::cout << "Could not evaluate at time " << t << std::endl;
-      fclose(fp);
-      return false;
-    }
-    if (!evaluateDerivative(twist, t, 1)) {
-      std::cout << "Could not evaluate derivative at time " << t << std::endl;
-      fclose(fp);
-      return false;
-    }
-    fprintf(fp, "%lf ", t);
-    fprintf(fp, "%lf %lf %lf ", pose.getPosition().x(), pose.getPosition().y(), pose.getPosition().z());
-    fprintf(fp, "%lf %lf %lf %lf ", pose.getRotation().w(), pose.getRotation().x(), pose.getRotation().y(), pose.getRotation().z());
-    fprintf(fp, "%lf %lf %lf ", twist.getTranslationalVelocity().x(), twist.getTranslationalVelocity().y(),
-            twist.getTranslationalVelocity().z());
-    fprintf(fp, "%lf %lf %lf ", twist.getRotationalVelocity().x(), twist.getRotationalVelocity().y(), twist.getRotationalVelocity().z());
-    fprintf(fp, "\n");
-
-    t += dt;
-  }
-  fclose(fp);
-
-  return true;
 }
 
 Time CubicHermiteSE3Curve::getMaxTime() const {
@@ -134,16 +61,6 @@ void CubicHermiteSE3Curve::fitCurveWithDerivatives(const std::vector<Time>& time
   }
 
   manager_.insertCoefficients(times, coefficients, outKeys);
-}
-
-void CubicHermiteSE3Curve::fitPeriodicCurve(const std::vector<Time>& times, const std::vector<ValueType>& values,
-                                            std::vector<Key>* outKeys) {
-  /* We assume that the first and last points coincide.
-   *
-   */
-  const size_t nPoints = times.size();
-  CubicHermiteSE3Curve::DerivativeType derivative = calculateSlope(times[nPoints - 2], times[1], values[nPoints - 2], values[1]);
-  fitCurveWithDerivatives(times, values, derivative, derivative, outKeys);
 }
 
 CubicHermiteSE3Curve::DerivativeType CubicHermiteSE3Curve::calculateSlope(const Time& timeA, const Time& timeB, const ValueType& coeffA,
@@ -391,75 +308,6 @@ bool CubicHermiteSE3Curve::evaluateLinearAcceleration(kindr::Acceleration3D& lin
   return true;
 }
 
-/// \brief Evaluate the angular velocity of Frame b as seen from Frame a, expressed in Frame a.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularVelocityA(Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief Evaluate the angular velocity of Frame a as seen from Frame b, expressed in Frame b.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularVelocityB(Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief Evaluate the velocity of Frame b as seen from Frame a, expressed in Frame a.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearVelocityA(Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief Evaluate the velocity of Frame a as seen from Frame b, expressed in Frame b.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearVelocityB(Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief evaluate the velocity/angular velocity of Frame b as seen from Frame a,
-/// expressed in Frame a. The return value has the linear velocity (0,1,2),
-/// and the angular velocity (3,4,5).
-Vector6d CubicHermiteSE3Curve::evaluateTwistA(Time /*time*/) {
-  assert(false && "Not implemented");
-  return Vector6d{};
-}
-/// \brief evaluate the velocity/angular velocity of Frame a as seen from Frame b,
-/// expressed in Frame b. The return value has the linear velocity (0,1,2),
-/// and the angular velocity (3,4,5).
-Vector6d CubicHermiteSE3Curve::evaluateTwistB(Time /*time*/) {
-  assert(false && "Not implemented");
-  return Vector6d{};
-}
-/// \brief Evaluate the angular derivative of Frame b as seen from Frame a, expressed in Frame a.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularDerivativeA(unsigned /*derivativeOrder*/, Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief Evaluate the angular derivative of Frame a as seen from Frame b, expressed in Frame b.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateAngularDerivativeB(unsigned /*derivativeOrder*/, Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief Evaluate the derivative of Frame b as seen from Frame a, expressed in Frame a.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearDerivativeA(unsigned /*derivativeOrder*/, Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief Evaluate the derivative of Frame a as seen from Frame b, expressed in Frame b.
-Eigen::Vector3d CubicHermiteSE3Curve::evaluateLinearDerivativeB(unsigned /*derivativeOrder*/, Time /*time*/) {
-  assert(false && "Not implemented");
-  return Eigen::Vector3d{};
-}
-/// \brief evaluate the velocity/angular derivative of Frame b as seen from Frame a,
-/// expressed in Frame a. The return value has the linear velocity (0,1,2),
-/// and the angular velocity (3,4,5).
-Vector6d CubicHermiteSE3Curve::evaluateDerivativeA(unsigned /*derivativeOrder*/, Time /*time*/) {
-  assert(false && "Not implemented");
-  return Vector6d{};
-}
-/// \brief evaluate the velocity/angular velocity of Frame a as seen from Frame b,
-/// expressed in Frame b. The return value has the linear velocity (0,1,2),
-/// and the angular velocity (3,4,5).
-Vector6d CubicHermiteSE3Curve::evaluateDerivativeB(unsigned /*derivativeOrder*/, Time /*time*/) {
-  assert(false && "Not implemented");
-  return Vector6d{};
-}
-
 void CubicHermiteSE3Curve::setMinSamplingPeriod(Time time) {
   hermitePolicy_.setMinSamplingPeriod(time);
 }
@@ -471,36 +319,6 @@ void CubicHermiteSE3Curve::setSamplingRatio(const int ratio) {
 
 void CubicHermiteSE3Curve::clear() {
   manager_.clear();
-}
-
-void CubicHermiteSE3Curve::transformCurve(const ValueType /*T*/) {
-  // todo
-}
-
-void CubicHermiteSE3Curve::saveCurveTimesAndValues(const std::string& filename) const {
-  std::vector<Time> curveTimes;
-  manager_.getTimes(&curveTimes);
-
-  saveCurveAtTimes(filename, curveTimes);
-}
-
-void CubicHermiteSE3Curve::saveCurveAtTimes(const std::string& filename, std::vector<Time> times) const {
-  Eigen::VectorXd v(7);
-
-  std::vector<Eigen::VectorXd> curveValues;
-  ValueType val;
-  for (auto time : times) {
-    evaluate(val, time);
-    v << val.getPosition().x(), val.getPosition().y(), val.getPosition().z(), val.getRotation().w(), val.getRotation().x(),
-        val.getRotation().y(), val.getRotation().z();
-    curveValues.push_back(v);
-  }
-
-  writeTimeVectorCSV(filename, times, curveValues);
-}
-
-void CubicHermiteSE3Curve::getCurveTimes(std::vector<Time>* outTimes) const {
-  manager_.getTimes(outTimes);
 }
 
 }  // namespace curves

@@ -18,7 +18,6 @@ find_package(catkin REQUIRED
   ${CATKIN_PACKAGE_DEPENDENCIES}
 )
 
-find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(Eigen3 REQUIRED)
 
 # Add Doxygen documentation
@@ -32,8 +31,6 @@ catkin_package(
     ${PROJECT_NAME}
   CATKIN_DEPENDS
     ${CATKIN_PACKAGE_DEPENDENCIES}
-  DEPENDS
-    Boost
 )
 
 add_library(${PROJECT_NAME}
@@ -41,7 +38,6 @@ add_library(${PROJECT_NAME}
   src/CubicHermiteSE3Curve.cpp
   src/SlerpSE3Curve.cpp
   src/polynomial_splines_traits.cpp
-  src/helpers.cpp
 )
 
 add_dependencies(${PROJECT_NAME}
@@ -60,7 +56,6 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
 
 install(TARGETS

@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <memory>
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <boost/math/special_functions/pow.hpp>
 
 #include <std_utils/containers/VectorMaxSize.hpp>
 
@@ -27,9 +27,6 @@ class PolynomialSplineContainer {
 
   //! Get a pointer to the spline with a given index.
   SplineType* getSpline(int splineIndex);
-
-  //! Get a reference to the spline with a given index.
-  const SplineList& getSplines() const;
 
   //! Update the spline internal time by dt [seconds].
   bool advance(double dt);
@@ -54,9 +51,6 @@ class PolynomialSplineContainer {
   //! Get total trajectory duration.
   double getContainerDuration() const;
 
-  //! Get currently active time point.
-  double getContainerTime() const;
-
   //! True if splines are empty.
   bool isEmpty() const;
 
@@ -74,9 +68,6 @@ class PolynomialSplineContainer {
    */
   int getActiveSplineIndexAtTime(double t, double& timeOffset) const;
 
-  //! Return spline index at current time validity.
-  int getActiveSplineIndex() const;
-
   //! Get position at time t[seconds];
   double getPositionAtTime(double t) const;
 
@@ -85,15 +76,6 @@ class PolynomialSplineContainer {
 
   //! Get acceleration at time t[seconds];
   double getAccelerationAtTime(double t) const;
-
-  //! Get position at the end of the spline.
-  double getEndPosition() const;
-
-  //! Get velocity at the end of the spline.
-  double getEndVelocity() const;
-
-  //! Get acceleration at the end of the spline.
-  double getEndAcceleration() const;
 
   /*!
    * Minimize spline coefficients s.t. position, velocity and acceleration constraints are satisfied
@@ -115,15 +97,8 @@ class PolynomialSplineContainer {
    */
   virtual bool setData(const std::vector<double>& knotDurations, const std::vector<double>& knotPositions);
 
-  static constexpr double undefinedValue = std::numeric_limits<double>::quiet_NaN();
-
-  bool checkContainer() const;
-
   //! Get the maximum number of splines allowed in a container.
   static constexpr int getMaxNumSplines() { return maxKnots_ - 1; }
-
-  //! Get the maximum number of knots allowed in a container.
-  static constexpr int getMaxNumKnots() { return maxKnots_; }
 
  protected:
   /*!
