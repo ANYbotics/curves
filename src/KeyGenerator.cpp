@@ -1,13 +1,12 @@
 #include "curves/KeyGenerator.hpp"
 
-#include <mutex>
+#include <atomic>
 
 namespace curves {
 
 size_t KeyGenerator::getNextKey() {
-  static size_t key = 0;
-  static std::mutex mutex;
-  std::lock_guard guard(mutex);
+  static_assert(std::atomic<size_t>::is_always_lock_free);
+  static std::atomic<size_t> key(0);
   return ++key;
 }
 
