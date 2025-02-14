@@ -2,7 +2,7 @@
 <package format="3">
 
   <name>curves</name>
-  <version>0.4.23</version>
+  <version>0.4.24</version>
   <description>Curves spline library.</description>
   <author>Renaud Dubé</author>
   <author>Abel Gawel</author>
