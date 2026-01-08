@@ -2,10 +2,6 @@
 
 #include <array>
 #include <cmath>
-#include <iostream>
-
-#include <Eigen/Core>
-#include <Eigen/QR>
 
 namespace curves {
 
@@ -75,12 +71,7 @@ struct spline_rep<double, 1> {
   static constexpr TimeVectorType ddtauZero{{0.0, 0.0}};
 
   //! Map initial pos and final pos to spline coefficients.
-  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients) {
-    coefficients[1] = opts.pos0_;                            // a0
-    coefficients[0] = (opts.posT_ - opts.pos0_) / opts.tf_;  // a1
-
-    return true;
-  }
+  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients);
 };
 
 // Specialization for quadratic splines.
@@ -103,13 +94,7 @@ struct spline_rep<double, 2> {
   static constexpr TimeVectorType ddtauZero{{2.0, 0.0, 0.0}};
 
   //! Map initial pos, initial vel and final pos to spline coefficients.
-  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients) {
-    coefficients[2] = opts.pos0_;                                                                 // a0
-    coefficients[1] = opts.vel0_;                                                                 // a1
-    coefficients[0] = (opts.posT_ - opts.pos0_ - opts.vel0_ * opts.tf_) / std::pow(opts.tf_, 2);  // a2
-
-    return true;
-  }
+  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients);
 };
 
 // Specialization for third order splines (cubic).
@@ -132,20 +117,7 @@ struct spline_rep<double, 3> {
   static constexpr TimeVectorType ddtauZero{{0.0, 2.0, 0.0, 0.0}};
 
   //! Map initial pos, initial vel, final pos and final vel to spline coefficients.
-  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients) {
-    Eigen::Matrix<double, numCoefficients, 1> b;
-    b << opts.pos0_, opts.vel0_, opts.posT_, opts.velT_;
-
-    Eigen::Matrix<double, numCoefficients, numCoefficients> A;
-    A << Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(tauZero.data()),
-        Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(dtauZero.data()),
-        Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((tau(opts.tf_)).data()),
-        Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((dtau(opts.tf_)).data());
-
-    Eigen::Map<Eigen::VectorXd>(coefficients.data(), numCoefficients, 1) = A.colPivHouseholderQr().solve(b);
-
-    return true;
-  }
+  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients);
 };
 
 // Specialization for fourth order (quartic) splines.
@@ -168,21 +140,7 @@ struct spline_rep<double, 4> {
   static constexpr TimeVectorType ddtauZero{{0.0, 0.0, 2.0, 0.0, 0.0}};
 
   //! Map initial pos/vel/accel and final pos/vel to spline coefficients.
-  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients) {
-    Eigen::Matrix<double, numCoefficients, 1> b;
-    b << opts.pos0_, opts.vel0_, opts.acc0_, opts.posT_, opts.velT_;
-
-    Eigen::Matrix<double, numCoefficients, numCoefficients> A;
-    A << Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(tauZero.data()),
-        Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(dtauZero.data()),
-        Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(ddtauZero.data()),
-        Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((tau(opts.tf_)).data()),
-        Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((dtau(opts.tf_)).data());
-
-    Eigen::Map<Eigen::VectorXd>(coefficients.data(), numCoefficients, 1) = A.colPivHouseholderQr().solve(b);
-
-    return true;
-  }
+  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients);
 };
 
 // Specialization for fifth order (quintic) splines.
@@ -211,22 +169,7 @@ struct spline_rep<double, 5> {
   static constexpr TimeVectorType ddtauZero{{0.0, 0.0, 0.0, 2.0, 0.0, 0.0}};
 
   //! Map initial pos/vel/accel and final pos/vel/accel to spline coefficients.
-  static inline bool compute(const SplineOptions& opts, SplineCoefficients& coefficients) {
-    Eigen::Map<Eigen::VectorXd>(coefficients.data(), numCoefficients, 1) =
-        (Eigen::Matrix<double, numCoefficients, numCoefficients>()
-             << Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(tauZero.data()),
-         Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(dtauZero.data()),
-         Eigen::Map<const Eigen::Matrix<double, 1, numCoefficients>>(ddtauZero.data()),
-         Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((tau(opts.tf_)).data()),
-         Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((dtau(opts.tf_)).data()),
-         Eigen::Map<Eigen::Matrix<double, 1, numCoefficients>>((ddtau(opts.tf_)).data()))
-            .finished()
-            .colPivHouseholderQr()
-            .solve((Eigen::Matrix<double, numCoefficients, 1>() << opts.pos0_, opts.vel0_, opts.acc0_, opts.posT_, opts.velT_, opts.accT_)
-                       .finished());
-
-    return true;
-  }
+  static bool compute(const SplineOptions& opts, SplineCoefficients& coefficients);
 };
 
 }  // namespace spline_traits
